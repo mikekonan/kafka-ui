@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "nuxt",
+    "debug": "nodemon --inspect node_modules/.bin/nuxt",
     "build": "nuxt build",
     "start": "nuxt start",
     "generate": "nuxt generate",
@@ -13,7 +14,12 @@
     "precommit": "npm run lint"
   },
   "dependencies": {
-    "nuxt": "^2.0.0"
+    "element-ui": "2.12.0",
+    "nuxt": "2.10.2",
+    "vue-json-pretty": "1.6.2",
+    "vue-loading-overlay": "3.2.0",
+    "vue-screen-size": "1.0.0",
+    "vue-spinner": "1.0.3"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
