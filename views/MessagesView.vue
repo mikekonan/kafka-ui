@@ -34,7 +34,7 @@
             </el-col>
         </el-row>
         <el-row>
-            <MessagesTable :refreshCb="load" :tableHeight="tableHeight"></MessagesTable>
+            <MessagesTable :tableHeight="tableHeight"></MessagesTable>
         </el-row>
     </el-card>
 </template>
