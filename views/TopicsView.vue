@@ -1,7 +1,18 @@
 <template>
     <el-card class="vld-parent" style="margin: 5px; width: 100%;">
         <div slot="header">
-            <span>Topics:</span>
+            <el-row>
+                <el-col :span="12">
+                    <span>Topics:</span>
+                </el-col>
+                <el-col :span="12">
+                    <el-button icon="el-icon-refresh-right" @click="refresh" :loading="refreshing"
+                               style="float: right;margin-top: -5px;"
+                               round size="mini">
+                        Refresh
+                    </el-button>
+                </el-col>
+            </el-row>
         </div>
         <el-input
                 style="width: 100%;"
@@ -16,8 +27,9 @@
                 loader="bars"
                 :active.sync="topicsLoading"
                 :is-full-page="false"
-                size="25px">
-        </loading>
+                size="25px"
+                color="#409EFF"/>
+
 
         <el-divider></el-divider>
 
@@ -41,8 +53,31 @@
             selectedTopic: String
         },
         components: {TopicsTable},
+        mounted: function () {
+            this.load();
+        },
+        methods: {
+            refresh: function () {
+                let self = this;
+                self.refreshing = true;
+                self.load(
+                    () => {
+                        self.refreshing = false
+                    }
+                );
+            },
+            load: function (cb) {
+                let self = this;
+                self.topicsLoading = true;
+                setTimeout(() => {
+                    self.topicsLoading = false
+                    cb()
+                }, 5000)
+            },
+        },
         data() {
             return {
+                refreshing: false,
                 topicsLoading: false,
                 topicSearchInput: "",
             }
