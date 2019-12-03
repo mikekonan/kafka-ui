@@ -1,3 +1,4 @@
 .idea
-wepapp/.nuxt
-wepapp/node_modules
+webapp/.nuxt
+webapp/node_modules
+data
