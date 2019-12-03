@@ -1,2 +1,3 @@
 .idea
-node_modules
+wepapp/.nuxt
+wepapp/node_modules
