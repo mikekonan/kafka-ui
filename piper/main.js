@@ -11,10 +11,11 @@ let consumer = new Kafka.KafkaConsumer(conf, {});
 
 let stream = null;
 
-consumer.on('ready', (info) => {
+consumer.on('ready', () => {
     consumer.getMetadata(null, (err, metadata) => {
         if (!!err) {
-            //TODO: log and exit
+            console.error(err);
+            process.exit(1);
         }
 
         stream = Kafka.KafkaConsumer.createReadStream(conf, undefined, {
@@ -22,9 +23,15 @@ consumer.on('ready', (info) => {
         });
 
         stream.on('data', function (message) {
-            console.log(message.topic, message.value.toString());
+            let headers = message.headers.map(h => {
+                let key = Object.keys(h)[0];
+                let val = h[key].toString();
+                let obj = {};
+                obj[key] = val;
+                return obj;
+            });
+            console.log(headers, message.topic, message.value.toString());
         });
-
     });
 });
 
