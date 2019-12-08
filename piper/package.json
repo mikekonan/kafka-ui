@@ -9,6 +9,9 @@
   "author": "mikalai.konan",
   "license": "MIT",
   "dependencies": {
-    "node-rdkafka": "^2.7.4"
+    "node-rdkafka": "^2.7.4",
+    "readable-stream": "^3.4.0",
+    "signale": "^1.4.0",
+    "stack-trace": "0.0.10"
   }
 }
