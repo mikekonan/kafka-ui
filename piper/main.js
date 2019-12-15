@@ -1,6 +1,6 @@
-const logger = require('./logger')('main');
-const kafkaTopic = require('./kafka/topic');
-const Consumer = require("./kafka/consumer");
+const logger = require('./lib/logger')('main');
+const kafkaTopic = require('./lib/kafka/topic');
+const Consumer = require("./lib/kafka/consumer");
 
 let topicsState = [];
 let consumer = null;
