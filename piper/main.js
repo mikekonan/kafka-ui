@@ -1,11 +1,11 @@
 const logger = require('./logger')('main');
-const topicFetch = require('./topic');
-const Consumer = require("./consumer");
+const kafkaTopic = require('./kafka/topic');
+const Consumer = require("./kafka/consumer");
 
 let topicsState = [];
 let consumer = null;
 
-topicFetch()(newTopicsState => {
+kafkaTopic()(newTopicsState => {
     let diff = topicsState
         .filter(x => !newTopicsState.includes(x))
         .concat(newTopicsState.filter(x => !topicsState.includes(x)));

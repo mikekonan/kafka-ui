@@ -1,20 +1,17 @@
 const {KafkaConsumer} = require('node-rdkafka');
 const {Readable} = require('readable-stream');
-const logger = require('./logger')('consumer');
+const logger = require('../logger')('message-consumer');
 
 const errListener = (listener, event, cb) => {
     listener.on(event, (err) => {
-        logger.error(
-            {
-                event: event,
-                error: !!err ? err.message : "error is empty",
-            });
-        cb();
-    })
+            logger.error(`event - '${event}', error - '${!!err ? err.message : "error is empty"}'`);
+            cb(err);
+        }
+    )
 };
 
 class Consumer extends Readable {
-    constructor({host = 'kafka', group = 'kafka-ui', keepalive = true, smallestOffset = true, persistOffset = false, topics} = {}) {
+    constructor({host = 'kafka', group = 'kafka-ui', keepalive = true, smallestOffset = false, persistOffset = false, topics} = {}) {
         super({objectMode: true});
 
         const self = this;
@@ -24,18 +21,21 @@ class Consumer extends Readable {
                 logger.info(`subscribing to topics - '${topics}'`);
 
                 self.stream = KafkaConsumer.createReadStream({
-                    'group.id': group,
-                    'metadata.broker.list': host,
-                    'socket.keepalive.enable': keepalive,
-                    'enable.auto.offset.store': persistOffset,
-                    'enable.auto.commit': persistOffset,
-                    'auto.offset.reset': smallestOffset ? 'smallest' : 'end',
-                }, {
-                    'auto.commit.enable': persistOffset,
-                    'auto.offset.reset': smallestOffset ? 'smallest' : 'end',
-                }, {topics: topics});
+                        'group.id': group,
+                        'metadata.broker.list': host,
+                        'socket.keepalive.enable': keepalive,
+                        'enable.auto.offset.store': persistOffset,
+                        'enable.auto.commit': persistOffset,
+                        'auto.offset.reset': smallestOffset ? 'smallest' : 'end',
+                    },
+                    {
+                        'auto.commit.enable': persistOffset,
+                        'auto.offset.reset': smallestOffset ? 'smallest' : 'end',
+                    },
+                    {topics: topics});
 
-                ['connection.failure', 'disconnected', 'error', 'event.error'].forEach(e => errListener(self.stream, e, () => self.emit('close')));
+                ['connection.failure', 'disconnected', 'error', 'event.error']
+                    .forEach(e => errListener(self.stream, e, () => self.emit('close')));
 
                 self.stream.on('close', () => {
                     logger.info('consumer closed')

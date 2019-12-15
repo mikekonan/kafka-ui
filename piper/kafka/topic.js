@@ -1,5 +1,5 @@
 const Promise = require("bluebird");
-const logger = require('./logger')('topics');
+const logger = require('../logger')('topics-consumer');
 const {KafkaConsumer} = require('node-rdkafka');
 
 module.exports = function (host = 'kafka', group = 'kafka-ui-fetch', keepalive = false, smallestOffset = true, persistOffset = false,
