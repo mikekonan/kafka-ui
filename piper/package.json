@@ -12,6 +12,7 @@
     "bluebird": "3.7.2",
     "log4js": "6.1.0",
     "node-rdkafka": "2.7.4",
-    "readable-stream": "3.4.0"
+    "readable-stream": "3.4.0",
+    "rethinkdb": "^2.4.2"
   }
 }

@@ -2,6 +2,8 @@ const {KafkaConsumer} = require('node-rdkafka');
 const {Readable} = require('readable-stream');
 const logger = require('../logger')('message-consumer');
 
+let isClosing = false;
+
 const errListener = (listener, event, cb) => {
     listener.on(event, (err) => {
             logger.error(`event - '${event}', error - '${!!err ? err.message : "error is empty"}'`);
@@ -10,14 +12,19 @@ const errListener = (listener, event, cb) => {
     )
 };
 
-class Consumer extends Readable {
+class MessageReader extends Readable {
     constructor({host = 'kafka', group = 'kafka-ui', keepalive = true, smallestOffset = false, persistOffset = false, topics} = {}) {
         super({objectMode: true});
-
         const self = this;
 
-        (function () {
+        (function connect() {
             {
+                if (isClosing) {
+                    setTimeout(() => connect(), 500);
+                    
+                    return
+                }
+
                 logger.info(`subscribing to topics - '${topics}'`);
 
                 self.stream = KafkaConsumer.createReadStream({
@@ -39,6 +46,7 @@ class Consumer extends Readable {
 
                 self.stream.on('close', () => {
                     logger.info('consumer closed')
+                    isClosing = false;
                 });
 
                 self.stream.on('data', async (message) => {
@@ -80,9 +88,10 @@ class Consumer extends Readable {
     }
 
     _destroy() {
+        isClosing = true;
         logger.info("closing consumer...");
         this.stream.close();
     }
 }
 
-module.exports = Consumer;
+module.exports = MessageReader;

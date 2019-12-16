@@ -1,6 +1,7 @@
 const logger = require('./lib/logger')('main');
 const kafkaTopic = require('./lib/kafka/topic');
 const Consumer = require("./lib/kafka/consumer");
+const Producer = require("./lib/rethink/producer");
 
 let topicsState = [];
 let consumer = null;
@@ -22,15 +23,18 @@ kafkaTopic()(newTopicsState => {
             topics: topicsState
         });
 
-        consumer.on('data', (msg) => {
-            if (!!msg.error) {
-                logger.error(JSON.stringify(msg));
-                return
-            }
-            logger.debug(JSON.stringify(msg));
-        }).on('close', (err) => {
-            logger.fatal(err);
-            process.exit(1);
-        });
+
+        new Producer().connect().then(producer => consumer.pipe(producer));
+
+        // consumer.on('data', (msg) => {
+        //     if (!!msg.error) {
+        //         logger.error(JSON.stringify(msg));
+        //         return
+        //     }
+        //     logger.debug(JSON.stringify(msg));
+        // }).on('close', (err) => {
+        //     logger.fatal(err);
+        //     process.exit(1);
+        // });
     }
 });
