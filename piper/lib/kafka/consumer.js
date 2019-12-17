@@ -13,7 +13,7 @@ const errListener = (listener, event, cb) => {
 };
 
 class MessageReader extends Readable {
-    constructor({host = 'kafka', group = 'kafka-ui', smallestOffset = true, persistOffset = false, topics} = {}) {
+    constructor({host = 'kafka', group = 'kafka-ui-messages-fetch', topics} = {}) {
         super({objectMode: true});
         const self = this;
 
@@ -29,14 +29,13 @@ class MessageReader extends Readable {
                 self.consumer = new KafkaConsumer({
                         'group.id': group,
                         'metadata.broker.list': host,
-                        'auto.offset.reset': smallestOffset ? 'smallest' : 'end'
                     }, {},
                     {waitInterval: 0, fetchSize: 200},
                 );
 
                 self.consumer.connect();
 
-                ['connection.failure', 'disconnected', 'error', 'event.error']
+                ['connection.failure', 'error', 'event.error']
                     .forEach(e => errListener(self.consumer, e, () => self._destroy()));
 
                 self.consumer
@@ -88,9 +87,12 @@ class MessageReader extends Readable {
     }
 
     _destroy() {
-        isClosing = true;
-        logger.info("closing consumer...");
-        this.consumer.disconnect();
+        if (!isClosing) {
+            isClosing = true;
+            logger.info("closing consumer...");
+            this.consumer.disconnect();
+            this.emit('close');
+        }
     }
 }
 
