@@ -18,15 +18,15 @@ kafkaTopic()(newTopicsState => {
 
         topicsState = newTopicsState;
 
-        logger.info(`Topics changed. Difference - '${diff}'. New topics to listen - '${topicsState}'`)
         consumer = new Consumer({
             topics: topicsState
         });
 
-
         new Producer().connect().then(producer => consumer.pipe(producer));
 
         // consumer.on('data', (msg) => {
+        //     console.log(counter++);
+        //
         //     if (!!msg.error) {
         //         logger.error(JSON.stringify(msg));
         //         return

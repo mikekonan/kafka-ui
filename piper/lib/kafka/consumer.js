@@ -13,75 +13,75 @@ const errListener = (listener, event, cb) => {
 };
 
 class MessageReader extends Readable {
-    constructor({host = 'kafka', group = 'kafka-ui', keepalive = true, smallestOffset = false, persistOffset = false, topics} = {}) {
+    constructor({host = 'kafka', group = 'kafka-ui', smallestOffset = true, persistOffset = false, topics} = {}) {
         super({objectMode: true});
         const self = this;
 
         (function connect() {
             {
                 if (isClosing) {
-                    setTimeout(() => connect(), 500);
-                    
+                    setTimeout(() => connect(), 50);
                     return
                 }
 
                 logger.info(`subscribing to topics - '${topics}'`);
 
-                self.stream = KafkaConsumer.createReadStream({
+                self.consumer = new KafkaConsumer({
                         'group.id': group,
                         'metadata.broker.list': host,
-                        'socket.keepalive.enable': keepalive,
-                        'enable.auto.offset.store': persistOffset,
-                        'enable.auto.commit': persistOffset,
-                        'auto.offset.reset': smallestOffset ? 'smallest' : 'end',
-                    },
-                    {
-                        'auto.commit.enable': persistOffset,
-                        'auto.offset.reset': smallestOffset ? 'smallest' : 'end',
-                    },
-                    {topics: topics});
+                        'auto.offset.reset': smallestOffset ? 'smallest' : 'end'
+                    }, {},
+                    {waitInterval: 0, fetchSize: 200},
+                );
+
+                self.consumer.connect();
 
                 ['connection.failure', 'disconnected', 'error', 'event.error']
-                    .forEach(e => errListener(self.stream, e, () => self.emit('close')));
+                    .forEach(e => errListener(self.consumer, e, () => self._destroy()));
 
-                self.stream.on('close', () => {
-                    logger.info('consumer closed')
-                    isClosing = false;
-                });
-
-                self.stream.on('data', async (message) => {
-                    let headers = [];
-                    if (!!message.headers) {
-                        headers = message.headers.map(h => {
-                            let key = Object.keys(h)[0];
-                            let val = h[key].toString();
-                            let obj = {};
-                            obj[key] = val;
-                            return obj;
-                        });
-                    }
-
-                    let msg = {
-                        topic: message.topic,
-                        headers: headers,
-                        offset: message.offset,
-                        partition: message.partition,
-                        timestamp: message.timestamp,
-                        size: message.size,
-                    };
-
-                    try {
-                        msg.payload = JSON.parse(message.value.toString())
-                    } catch (e) {
-                        msg.payload = {};
-                        msg.error = e.message;
-                    }
-
-
-                    self.push(msg);
-                });
+                self.consumer
+                    .on('close', () => {
+                        logger.info('consumer closed');
+                        isClosing = false;
+                    })
+                    .on('ready', () => {
+                        self.consumer.subscribe(topics);
+                        setInterval(() => self.consumer.consume(200), 1000);
+                    })
+                    .on('data', (message) => self._on_message(message));
             }
         })()
+    }
+
+    _on_message(message) {
+        let headers = [];
+        if (!!message.headers) {
+            headers = message.headers.map(h => {
+                let key = Object.keys(h)[0];
+                let val = h[key].toString();
+                let obj = {};
+                obj[key] = val;
+                return obj;
+            });
+        }
+
+        let msg = {
+            topic: message.topic,
+            headers: headers,
+            offset: message.offset,
+            partition: message.partition,
+            timestamp: message.timestamp,
+            size: message.size,
+        };
+
+        try {
+            msg.payload = JSON.parse(message.value.toString())
+        } catch (e) {
+            msg.payload = {};
+            msg.error = e.message;
+        }
+
+        this.push(msg);
     }
 
     _read() {
@@ -90,7 +90,7 @@ class MessageReader extends Readable {
     _destroy() {
         isClosing = true;
         logger.info("closing consumer...");
-        this.stream.close();
+        this.consumer.disconnect();
     }
 }
 
