@@ -1,4 +1,5 @@
 module.exports = {
+    mode: "spa",
     head: {
         title: 'kafka-ui',
         meta: [
@@ -21,7 +22,9 @@ module.exports = {
         'element-ui/lib/theme-chalk/index.css',
         '~/assets/transition.css'
     ],
-    modules: [],
+    modules: [
+        '@neneos/nuxt-animate.css'
+    ],
     loading: {color: '#3B8070'},
     build: {
         extend(config, {isDev, isClient}) {
@@ -32,5 +35,4 @@ module.exports = {
             }
         }
     }
-}
-
+};

@@ -3,7 +3,7 @@
 </template>
 
 <script>
-    import MessagesView from "@/views/MessagesView";
+    import MessagesView from '@/views/MessagesView';
 
     export default {
         computed: {
