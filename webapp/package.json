@@ -16,14 +16,17 @@
   "dependencies": {
     "@neneos/nuxt-animate.css": "0.0.1",
     "element-ui": "2.13.0",
+    "lodash": "^4.17.15",
     "nuxt": "2.11.0",
     "v-jsoneditor": "1.2.3",
+    "vue-clipboard2": "^0.3.1",
     "vue-loading-overlay": "3.2.0",
     "vue-screen-size": "^1.0.0",
     "vue-spinner": "1.0.3"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
+    "element-theme-dark": "^1.0.3",
     "eslint": "^4.19.1",
     "eslint-friendly-formatter": "^4.0.1",
     "eslint-loader": "^2.1.1",
