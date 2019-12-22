@@ -4,15 +4,19 @@
         <span @click="copyValue">
               {{value}}
         </span>
-        <div @click="remove" class="trash el-icon-delete"></div>
+        <div class="trash-stub"></div>
+        <div @click="ignore" class="trash el-icon-delete"></div>
     </div>
 </template>
 
 <script>
     export default {
         methods: {
-            remove: function () {
-                alert(this.name)
+            ignore: function () {
+                this.$store.commit('message-prop/ignoreProp', this.name);
+                // console.log(this.$store.state['message-prop']['ignoredProps']);
+
+                // alert(this.name)
             },
             copyName: function () {
                 this.$copyText(this.name).catch(e => console.log(e));
@@ -36,6 +40,16 @@
 </script>
 
 <style>
+    .trash-stub {
+        width: 12px;
+        padding: 0 5px;
+        margin-right: -10px;
+        height: 12px;
+        line-height: 20px;
+        border-radius: 10px;
+        display: inline-block;
+    }
+
     .trash {
         padding: 0 5px;
         margin-right: -10px;
@@ -75,6 +89,10 @@
 
     .chip:hover .trash {
         display: inline-block;
+    }
+
+    .chip:hover .trash-stub {
+        display: none;
     }
 
     .chip:hover {

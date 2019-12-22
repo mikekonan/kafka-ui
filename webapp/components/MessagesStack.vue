@@ -1,5 +1,6 @@
 <template>
     <div style="margin-top: -20px;">
+
         <!--        <el-button @click='addTestData'>add</el-button>-->
         <!--        <el-button @click='removeTestData'>remove</el-button>-->
 
@@ -8,18 +9,23 @@
                 leave-active-class="animated slideOutRight anim-fast" tag="div">
             <div v-for="item in data" v-bind:key="item" class="card">
                 <div style="margin-top: 5px; margin-bottom: 5px;">
-                    <template v-for="name in ['at', 'offset', 'id', 'partition', 'size', 'timestamp','topic']">
-                        <Chip color="blue" :name="name" :value="item[name]"></Chip>
+                    <template v-for="name in
+                    ['at', 'offset', 'id', 'partition', 'size', 'timestamp','topic']
+                            .filter(e=>!$store.state['message-prop']['ignoredProps'].includes(e))">
+                        <Chip color="blue" :name="name" :value="item[name].toString()"></Chip>
                     </template>
 
                     <template v-for="header in item.headers">
-                        <template v-for="name in Object.keys(header)">
-                            <Chip color="green" :name="`${name}`" :value="header[name]"></Chip>
+                        <template
+                                v-for="name in Object.keys(header).filter(e=>!$store.state['message-prop']['ignoredProps'].includes(e))">
+                            <Chip color="green" :name="`${name}`" :value="header[name].toString()"></Chip>
                         </template>
                     </template>
 
                     <template v-for="(propVal,propName) in extractPropValues(item.payload)">
-                        <Chip color="orange" :name="propName" :value="propVal"></Chip>
+                        <template v-if="!$store.state['message-prop']['ignoredProps'].includes(propName)">
+                            <Chip color="orange" :name="propName" :value="propVal.toString()"></Chip>
+                        </template>
                     </template>
                 </div>
             </div>

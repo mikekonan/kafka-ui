@@ -50,6 +50,7 @@ class RethinkProducer extends Writable {
             timestamp: message.timestamp,
             at: r.epochTime(message.timestamp / 1000),
             size: message.size,
+            payload: message.payload
         }).run(self.conn).finally(() => callback())
     }
 
