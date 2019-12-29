@@ -1,6 +1,6 @@
 <template>
     <div>
-        <SendDialog :closedFunc="()=>{this.showSendDialog=false}" :show="showSendDialog"></SendDialog>
+        <SendDialog :closedFunc="()=>{this.showSendDialog=false}" :show="showSendDialog"/>
         <el-button v-if="isSingle" circle style="right: 15px; bottom:60px; z-index: 10; position: absolute;"
                    @click="isSingle = false"
                    icon="el-icon-circle-plus-outline"/>

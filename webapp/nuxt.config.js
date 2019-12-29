@@ -15,7 +15,8 @@ module.exports = {
         '@/plugins/server/element-ui',
         '@/plugins/server/spinner',
         {src: '@/plugins/client/json-editor', mode: 'client'},
-        {src: '@/plugins/client/clipboard', mode: 'client'}
+        {src: '@/plugins/client/clipboard', mode: 'client'},
+        {src: '@/plugins/client/screen-size', mode: 'client'},
     ],
     css: [
         'element-ui/lib/theme-chalk/reset.css',

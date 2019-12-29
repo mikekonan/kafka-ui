@@ -1,32 +1,29 @@
 <template>
-    <div style="margin-top: -20px;">
-
+    <div ref="container" class="background container" :style="`height: ${this.$vssHeight - 130}px;`">
         <!--        <el-button @click='addTestData'>add</el-button>-->
         <!--        <el-button @click='removeTestData'>remove</el-button>-->
-
         <transition-group
+                ref="messages"
                 enter-active-class="animated slideInLeft anim-fast"
                 leave-active-class="animated slideOutRight anim-fast" tag="div">
-            <div v-for="item in data" v-bind:key="item" class="card">
-                <div style="margin-top: 5px; margin-bottom: 5px;">
+            <div v-for="item in data" v-bind:key="item.toString()" class="card secondary-background">
+                <div style="margin-top: 15px; margin-bottom: 5px;">
                     <template v-for="name in
                     ['at', 'offset', 'id', 'partition', 'size', 'timestamp','topic']
                             .filter(e=>!$store.state['message-prop']['ignoredProps'].includes(e))">
-                        <Chip color="blue" :name="name" :value="item[name].toString()"></Chip>
+                        <Chip color="blue" :name="name" :value="item[name].toString()"/>
                     </template>
 
                     <template v-for="header in item.headers">
                         <template
                                 v-for="name in Object.keys(header).filter(e=>!$store.state['message-prop']['ignoredProps'].includes(e))">
-                            <Chip color="green" :name="`${name}`" :value="header[name].toString()"></Chip>
+                            <Chip color="green" :name="`${name.toString()}`" :value="header[name].toString()"/>
                         </template>
                     </template>
 
-                    <template v-for="(propVal,propName) in extractPropValues(item.payload)">
-                        <template v-if="!$store.state['message-prop']['ignoredProps'].includes(propName)">
-                            <Chip color="orange" :name="propName" :value="propVal.toString()"></Chip>
-                        </template>
-                    </template>
+                    <el-divider class="straight-secondary divider"/>
+
+                    <Collapse :text="item.payload"/>
                 </div>
             </div>
         </transition-group>
@@ -35,10 +32,13 @@
 
 <script>
     import Chip from "./Chip";
+    import Collapse from "./Collapse";
+    import Velocity from "velocity-animate";
 
     export default {
         components: {
-            Chip
+            Chip,
+            Collapse
         },
         props: {
             showSendDialog: false,
@@ -49,6 +49,7 @@
             }
         },
         mounted: function () {
+            Velocity(this.$refs.messages, "scroll", {container: this.$refs.container});
             for (let i = 0; i < 20; i++) {
                 this.addTestData();
             }
@@ -126,21 +127,34 @@
 </script>
 
 <style scoped>
+    .container {
+        margin-top: -20px;
+        overflow-y: auto;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    .divider {
+        margin-top: 5px;
+        margin-bottom: 0;
+    }
+
     .anim-fast {
         animation-duration: 250ms;
     }
 
     .card {
         margin: 0 10px 0 10px;
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.3);
-        transition: 0.25s;
-        border-radius: 5px; /* 5px rounded corners */
+        box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.3);
+        transition: 0.05s;
+        border-radius: 10px; /* 5px rounded corners */
     }
 
     .card:hover {
-        -webkit-transform: scale(1.01);
-        -ms-transform: scale(1.01);
-        transform: scale(1.01);
-        background-color: #F2F6FC;
+        -webkit-transform: scale(1.0005);
+        -ms-transform: scale(1.0005);
+        transform: scale(1.0005);
+        background: rgb(34, 47, 62);
+        background: linear-gradient(90deg, rgba(34, 47, 62, 1) 0%, rgba(16, 88, 108, 1) 50%, rgba(34, 47, 62, 1) 100%);
     }
 </style>

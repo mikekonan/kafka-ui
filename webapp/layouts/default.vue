@@ -9,6 +9,9 @@
         components: {
             TopicsView,
         },
+        mounted() {
+            document.querySelector('body').className = "background"
+        },
         data() {
             return {}
         }

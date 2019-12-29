@@ -1,5 +1,5 @@
 <template>
-    <el-card class="vld-parent" style="margin: 5px; width: 100%;">
+    <el-card class="vld-parent background" style="margin: 5px; width: 100%;">
         <div slot="header">
             <el-row>
                 <el-col :span="12">
@@ -28,10 +28,10 @@
                 :active.sync="topicsLoading"
                 :is-full-page="false"
                 size="25px"
-                color="#409EFF"/>
+                color="#8ED97E"/>
 
 
-        <el-divider></el-divider>
+        <el-divider class="straight-secondary"></el-divider>
 
         <TopicsTable :selectedTopic="selectedTopic"></TopicsTable>
     </el-card>

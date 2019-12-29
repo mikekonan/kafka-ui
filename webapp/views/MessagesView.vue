@@ -1,11 +1,11 @@
 <template>
-    <el-card class="vld-parent">
+    <el-card class="vld-parent background straight-secondary-border">
         <loading
                 loader="bars"
                 :active.sync="messagesLoading"
                 :is-full-page="false"
                 size="25px"
-                color="#409EFF"
+                color="#8ED97E"
         />
 
         <el-row :gutter="20">
@@ -22,7 +22,7 @@
             </el-col>
             <el-col :span="9">
                 <el-row :gutter="5">
-                    <div class="separated"></div>
+                    <div class="separated straight-secondary"></div>
                     <el-col :span="4">
                         <el-switch @change="refresh" style="left: 5px; margin-top: 8px;" v-model="offsetEnabled"/>
                     </el-col>
@@ -35,7 +35,7 @@
             </el-col>
             <el-col :span="9">
                 <el-row>
-                    <div class="separated"></div>
+                    <div class="separated straight-secondary"></div>
                     <el-input
                             @change="refresh"
                             size="small"
@@ -47,12 +47,12 @@
 
             </el-col>
         </el-row>
-        <el-divider></el-divider>
+        <el-divider class="straight-secondary"></el-divider>
         <el-row>
             <el-button size="small" circle style="right: 15px; top:-10px; z-index: 10; position: absolute;"
                        @click="showSendDialog = true"
                        icon="el-icon-setting"/>
-            <MessagesStack style="overflow-y: auto;" @search-change="refresh"></MessagesStack>
+            <MessagesStack @search-change="refresh"></MessagesStack>
         </el-row>
     </el-card>
 </template>
@@ -108,7 +108,7 @@
         left: -8px;
         margin-top: -15px;
         position: absolute;
-        border-left: 1px solid #E4E7ED;
+        border-left: 1px solid;
         height: 67px;
     }
 </style>

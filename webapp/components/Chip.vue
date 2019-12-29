@@ -14,9 +14,6 @@
         methods: {
             ignore: function () {
                 this.$store.commit('message-prop/ignoreProp', this.name);
-                // console.log(this.$store.state['message-prop']['ignoredProps']);
-
-                // alert(this.name)
             },
             copyName: function () {
                 this.$copyText(this.name).catch(e => console.log(e));
@@ -33,7 +30,7 @@
         },
         data() {
             return {
-                colors: {blue: '#409EFF', red: '#F56C6C', green: '#67C23A', orange: '#E6A23C'}
+                colors: {blue: '#0099FA', red: '#F56C6C', green: '#007D51', orange: '#BD861F'}
             }
         },
     }
@@ -56,7 +53,7 @@
         height: 20px;
         line-height: 20px;
         border-radius: 10px;
-        background-color: #f5454a;
+        background-color: red;
         display: none;
     }
 
@@ -77,7 +74,7 @@
     }
 
     .chip {
-        margin: 5px 5px 5px 5px;
+        margin: 5px 0 0 5px;
         background-color: rgb(224, 224, 224);
         display: inline-block;
         padding: 0 10px;
