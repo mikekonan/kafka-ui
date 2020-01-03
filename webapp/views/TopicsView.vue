@@ -22,18 +22,14 @@
                 size="mini"
         >
         </el-input>
-
         <loading
                 loader="bars"
                 :active.sync="topicsLoading"
                 :is-full-page="false"
                 size="25px"
-                color="#8ED97E"/>
-
-
-        <el-divider class="straight-secondary"></el-divider>
-
-        <TopicsTable :selectedTopic="selectedTopic"></TopicsTable>
+                color="#008489"/>
+        <el-divider class="straight-secondary"/>
+        <TopicsTable :selectedTopic="selectedTopic"/>
     </el-card>
 </template>
 

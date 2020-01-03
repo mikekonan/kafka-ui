@@ -5,9 +5,9 @@
                 :active.sync="messagesLoading"
                 :is-full-page="false"
                 size="25px"
-                color="#8ED97E"
+                color="#10586C"
+                style="z-index: 1010"
         />
-
         <el-row :gutter="20">
             <el-col :span="6">
                 <el-select @change="refresh" size="small" style="width: 100%; margin-top: 5px;" v-model="selectedTopic"
@@ -46,19 +46,30 @@
                 </el-row>
 
             </el-col>
+<!--            <el-col :span="2">-->
+            <!--                <el-row>-->
+            <!--                    <div class="separated straight-secondary"></div>-->
+            <!--                    <div style="margin-top: -15px; height :35px;  background: orangered">-->
+            <!--                        <el-button style="margin-left: auto; margin-right: auto;" class="primary-button" size="mini" icon="el-icon-s-promotion">Publish</el-button>-->
+            <!--                    </div>-->
+            <!--                    <div style="margin-bottom: -15px;  height :35px; background: green">-->
+            <!--                        <el-button class="secondary-button" size="mini" icon="el-icon-s-promotion">Settings</el-button>-->
+            <!--                    </div>-->
+            <!--                </el-row>-->
+            <!--            </el-col>-->
         </el-row>
         <el-divider class="straight-secondary"></el-divider>
         <el-row>
-            <el-button size="small" circle style="right: 15px; top:-10px; z-index: 10; position: absolute;"
-                       @click="showSendDialog = true"
-                       icon="el-icon-setting"/>
-            <MessagesStack @search-change="refresh"></MessagesStack>
+            <!--            <el-button size="small" circle style="right: 15px; top:-10px; z-index: 10; position: absolute;"-->
+            <!--                       @click="showSendDialog = true"-->
+            <!--                       icon="el-icon-setting"/>-->
+            <Messages @search-change="refresh"></Messages>
         </el-row>
     </el-card>
 </template>
 
 <script>
-    import MessagesStack from '@/components/MessagesStack.vue';
+    import Messages from '@/components/Messages.vue';
 
     export default {
         computed: {},
@@ -77,15 +88,17 @@
                 self.messagesLoading = true;
                 setTimeout(() => {
                     self.messagesLoading = false;
-                    cb()
-                }, 1000)
+                    if (!!cb) {
+                        cb()
+                    }
+                }, 3000)
             },
         },
         mounted: function () {
             this.load()
         },
         components: {
-            MessagesStack,
+            Messages,
         },
         data() {
             return {
@@ -104,6 +117,13 @@
 </script>
 
 <style scoped>
+    .button {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        margin: 5px;
+    }
+
     .separated {
         left: -8px;
         margin-top: -15px;

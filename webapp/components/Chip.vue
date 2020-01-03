@@ -1,11 +1,11 @@
 <template>
     <div class="chip">
         <div @click="copyName" :style="`background-color: ${colors[color]}`" class="key">{{name}}</div>
-        <span @click="copyValue">
+        <span v-if="!!value" @click="copyValue">
               {{value}}
         </span>
         <div class="trash-stub"></div>
-        <div @click="ignore" class="trash el-icon-delete"></div>
+        <div style="color :black;" @click="ignore" class="trash el-icon-delete"></div>
     </div>
 </template>
 
@@ -13,24 +13,35 @@
     export default {
         methods: {
             ignore: function () {
-                this.$store.commit('message-prop/ignoreProp', this.name);
+                if (!!this.filterOnTrash) {
+                    this.$store.commit('message-prop/addIgnoreProp', this.name);
+                    return
+                }
+
+                this.$store.commit('message-prop/rmIgnoreProp', this.name);
             },
             copyName: function () {
-                this.$copyText(this.name).catch(e => console.log(e));
+                if (!!this.copy) {
+                    this.$copyText(this.name).catch(e => console.log(e));
+                }
             },
             copyValue: function () {
-                this.$copyText(this.value).catch(e => console.log(e));
+                if (!!this.copy) {
+                    this.$copyText(this.value).catch(e => console.log(e));
+                }
             }
         },
         components: {},
         props: {
+            filterOnTrash: Boolean,
+            copy: Boolean,
             name: String,
             value: String,
             color: String,
         },
         data() {
             return {
-                colors: {blue: '#0099FA', red: '#F56C6C', green: '#007D51', orange: '#BD861F'}
+                colors: {blue: '#0099FA', red: '#F56C6C', green: '#008489', orange: '#BD861F'}
             }
         },
     }

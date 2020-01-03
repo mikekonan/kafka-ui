@@ -1,0 +1,72 @@
+.primary-button {
+    background-color: #008489;
+    color: #D8F3FF;
+    border-color: #008489;
+}
+
+.secondary-button {
+    background-color: #0099FA;
+    color: #D8F3FF;
+    border-color: #0099FA;
+}
+
+.text-color {
+    color: #D8F3FF;
+}
+
+.el-dialog__header {
+    background: rgb(34, 47, 62);
+    background: linear-gradient(90deg, rgba(34, 47, 62, 1) 0%, rgba(66, 73, 95, 1) 50%, rgba(34, 47, 62, 1) 100%);
+
+}
+
+.el-dialog__body {
+    color: #D8F3FF;
+    background: rgb(34, 47, 62);
+    background: linear-gradient(90deg, rgba(34, 47, 62, 1) 0%, rgba(66, 73, 95, 1) 50%, rgba(34, 47, 62, 1) 100%);
+}
+
+.el-dialog__footer{
+    color: #D8F3FF;
+    background: rgb(34, 47, 62);
+    background: linear-gradient(90deg, rgba(34, 47, 62, 1) 0%, rgba(66, 73, 95, 1) 50%, rgba(34, 47, 62, 1) 100%);
+}
+
+.el-input__inner {
+    color: #D8F3FF;
+    background: rgb(34, 47, 62);
+    border-color: #10586C;
+}
+
+.el-input__inner:hover {
+    border-color: #D8F3FF;
+}
+
+.el-input.is-focus {
+    border-color: #D8F3FF;
+}
+
+.el-select-dropdown__item{
+    color: #D8F3FF;
+    background-color: rgb(34, 47, 62);
+}
+
+.el-select-dropdown__item:hover{
+    color: #D8F3FF;
+    background-color: #10586C;
+}
+
+.el-select-dropdown__item.selected{
+    color: #D8F3FF;
+    background-color: rgb(34, 47, 62);
+}
+
+.el-select-dropdown__list{
+    color: #D8F3FF;
+    background-color: rgb(34, 47, 62);
+    border-color: red;
+}
+
+.el-select-dropdown{
+    border-color: rgb(34, 47, 62);
+}

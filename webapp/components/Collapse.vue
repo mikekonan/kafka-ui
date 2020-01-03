@@ -1,13 +1,26 @@
 <template>
-    <div class="colored">
-        <div @mouseover="mouseover" @mouseleave="mouseleave" ref="button" @click="onClick"
-             class="button el-icon-right"/>
+    <div class="collapse">
+        <el-tooltip class="button" effect="dark" content="Copy to buffer" placement="left">
+            <div
+                    @mouseover="copyMouseover" @mouseleave="copyMouseleave" @click="copyJson"
+                    ref="copyButton"
+                    style="border-color:#008489; color: white;background-color: #008489; float: right;"
+                    class="button ">
+                <i style="margin-left: 3px; font-size: 14px;" class="el-icon-copy-document"/>
+            </div>
+        </el-tooltip>
 
-        <div style="display: none" ref="formatted" class="inline-text">
-            <prism language="json" :code="JSON.stringify(text, null, 2)"/>
+        <div @mouseover="expandMouseover" @mouseleave="expandMouseleave" ref="button" @click="onExpandClick"
+             class="button">
+            <i style="margin-left: 3px; font-size: 14px;" class="el-icon-right"/>
+        </div>
+
+
+        <div style="display: none" ref="formatted">
+            <prism language="json" :code="JSON.stringify(obj, null, 4)"/>
         </div>
         <div ref="nonformatted" class="inline-text">
-            {{text}}
+            {{JSON.stringify(obj)}}
         </div>
     </div>
 </template>
@@ -27,37 +40,46 @@
             }
         },
         props: {
-            text: String,
+            obj: Object,
         },
         mounted() {
         },
         methods: {
-            mouseover: function () {
-                Velocity(this.$refs.button, {scale: 1.2}, {duration: 50})
+            copyJson: function () {
+                this.$copyText(JSON.stringify(this.obj, null, 4)).catch(e => console.log(e));
             },
-            mouseleave: function () {
-                Velocity(this.$refs.button, {scale: 1.1}, {duration: 50})
+            copyMouseover: function () {
+                return Velocity(this.$refs.copyButton, {scale: 1.2}, {duration: 50})
             },
-            onClick: function () {
+            copyMouseleave: function () {
+                return Velocity(this.$refs.copyButton, {scale: 1.0}, {duration: 50})
+            },
+            expandMouseover: function () {
+                return Velocity(this.$refs.button, {scale: 1.2}, {duration: 50})
+            },
+            expandMouseleave: function () {
+                return Velocity(this.$refs.button, {scale: 1.0}, {duration: 50})
+            },
+            onExpandClick: function () {
                 this.isActive = !this.isActive;
                 let emit = () => this.$emit('isActive', this.isActive);
 
                 if (this.isActive) {
                     return Promise.all([
-                        Velocity(this.$refs.button, {rotateZ: '90deg'}, {duration: 300}),
+                        Velocity(this.$refs.button, {rotateZ: '90deg'}, {duration: 200}),
                         Velocity(this.$refs.formatted, "slideDown", {
-                            delay: 150,
-                            duration: 150
+                            delay: 100,
+                            duration: 100
                         }),
-                        Velocity(this.$refs.nonformatted, "slideUp", {duration: 150})
+                        Velocity(this.$refs.nonformatted, "slideUp", {duration: 100})
                     ])
                         .then(() => emit());
                 }
 
                 return Promise.all([
-                    Velocity(this.$refs.button, {rotateZ: '0deg',}, {duration: 300}),
-                    Velocity(this.$refs.formatted, "slideUp", {duration: 150}),
-                    Velocity(this.$refs.nonformatted, "slideDown", {display: "inline"}, {delay: 150, duration: 150})
+                    Velocity(this.$refs.button, {rotateZ: '0deg',}, {duration: 200}),
+                    Velocity(this.$refs.formatted, "slideUp", {duration: 100}),
+                    Velocity(this.$refs.nonformatted, "slideDown", {display: "inline"}, {delay: 100, duration: 100})
                 ]).then(() => emit());
             },
         },
@@ -70,17 +92,19 @@
         display: inline;
     }
 
-    .colored {
+    .collapse {
         color: #D8F3FF;
+        padding-bottom: 5px;
     }
 
     .button {
         display: inline-block;
-        margin: 5px 0 0 5px;
+        margin: 5px 5px 0;
         font-size: 16px;
         border-radius: 50%;
         color: white;
-        background-color: #BD861F;
-        transform: scale(1.1);
+        background-color: #E09F20;
+        width: 20px;
+        height: 20px;
     }
 </style>

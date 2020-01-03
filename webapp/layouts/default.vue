@@ -1,14 +1,14 @@
 <template>
-    <nuxt/>
+    <div>
+        <nuxt/>
+    </div>
 </template>
 
 <script>
-    import TopicsView from "@/views/TopicsView";
+    import "~/assets/global.css"
 
     export default {
-        components: {
-            TopicsView,
-        },
+        components: {},
         mounted() {
             document.querySelector('body').className = "background"
         },
@@ -18,3 +18,7 @@
     };
 
 </script>
+
+<style>
+
+</style>

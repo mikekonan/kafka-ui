@@ -19,14 +19,14 @@
                 <el-card style="height: 500px;">
                     <span slot="header">Payload:</span>
                     <v-jsoneditor v-model="payloadContent" :options="getJsonEditorOptions()"
-                                  height="420px"></v-jsoneditor>
+                                  height="420px"/>
                 </el-card>
             </el-col>
             <el-col :offset="1" :span="11">
                 <el-card style="height: 500px;">
                     <span slot="header">Metadata:</span>
                     <v-jsoneditor v-model="metadataContent" :options="getJsonEditorOptions()"
-                                  height="420px"></v-jsoneditor>
+                                  height="420px"/>
                 </el-card>
             </el-col>
         </el-row>
