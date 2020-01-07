@@ -1,15 +1,12 @@
-import Vue from "vue";
-
 export const state = () => ({
-    topicsState: {},
-    search: "",
+    topics: []
 });
 
 export const mutations = {
-    setTopics(state, topics) {
-        Vue.set(state.topicsState, 'topics', topics);
+    add(state, msg) {
+        state.topics.push(msg.topic);
     },
-    setSearch(state, val) {
-        Vue.set(state, 'search', val);
-    }
+    truncate(state) {
+        state.topics = []
+    },
 };

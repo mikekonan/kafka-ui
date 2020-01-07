@@ -42,8 +42,6 @@
         props: {
             obj: Object,
         },
-        mounted() {
-        },
         methods: {
             copyJson: function () {
                 this.$copyText(JSON.stringify(this.obj, null, 4)).catch(e => console.log(e));

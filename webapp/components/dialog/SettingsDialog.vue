@@ -13,26 +13,37 @@
 
             <el-divider class="straight-secondary"/>
 
-            <template style="margin: 5px;" v-for="name in $store.state['message-prop']['ignoredProps']">
-                <Chip color="blue" :name="name"/>
+            <template style="margin: 5px;" v-for="name in $store.state['message-prop']['ignoredMetadataProps']">
+                <Chip color="blue"
+                      :name="name"
+                      :onTrash="()=> $store.commit('message-prop/rmIgnoreMetadataProp', name)"/>
+            </template>
+
+            <template style="margin: 5px;" v-for="name in $store.state['message-prop']['ignoredMessageHeaderProps']">
+                <Chip color="green"
+                      :name="name"
+                      :onTrash="()=> $store.commit('message-prop/rmIgnoreMessageHeaderProp', name)"/>
             </template>
         </el-card>
     </el-dialog>
 </template>
 
 <script>
-    import Chip from "./Chip";
+    import Chip from "../message/Chip";
 
     export default {
         watch: {
             mode: function (newVal) {
+                if (!!!newVal) return;
+
                 if (newVal === "One tab") {
-                    this.$store.commit('split-view/setSplitMode', false);
+                    this.$store.commit('messages/setIsActive', {store: "store2", isActive: false});
+                    this.$store.commit('messages/stopSubConn', {store: "store2"});
 
                     return
                 }
 
-                this.$store.commit('split-view/setSplitMode', true);
+                this.$store.commit('messages/setIsActive', {store: "store2", isActive: true});
             }
         },
         components: {Chip},
@@ -41,7 +52,7 @@
             closedFunc: Function
         },
         mounted() {
-            if (!!this.$store.state['split-view']['splitMode']) {
+            if (!!!this.$store.state['split-view']['splitMode']) {
                 this.mode = "One tab";
                 return;
             }

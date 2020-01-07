@@ -5,7 +5,7 @@
                 <el-select size="mini"
                            v-model="selectedTopic" filterable placeholder="Select topic">
                     <el-option
-                            v-for="item in this.$store.state.topics.topicsState.topics"
+                            v-for="item in this.$store.state.topics.topics"
                             :key="item"
                             :label="item"
                             :value="item">

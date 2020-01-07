@@ -20,16 +20,27 @@
         </transition>
         <div style="min-height: 80px">
             <template v-for="name in
-                    ['at', 'offset', 'id', 'partition', 'size', 'timestamp','topic']
-                            .filter(e=>!$store.state['message-prop']['ignoredProps'].includes(e))">
-                <Chip :filterOnTrash="true" :copy="true" color="blue" :name="name" :value="row[name].toString()"/>
+                    ['offset', 'at', 'id', 'partition', 'size', 'timestamp','topic']
+                            .filter(e=>!$store.state['message-prop']['ignoredMetadataProps'].includes(e))">
+                <Chip :filterOnTrash="true"
+                      :copy="true"
+                      color="blue"
+                      :name="name"
+                      :value="row[name].toString()"
+                      :onTrash="()=> $store.commit('message-prop/addIgnoreMetadataProp', name)"
+                />
             </template>
 
             <template v-for="header in row.headers">
                 <template
-                        v-for="name in Object.keys(header).filter(e=>!$store.state['message-prop']['ignoredProps'].includes(e))">
-                    <Chip :filterOnTrash="true" :copy="true" color="green" :name="`${name.toString()}`"
-                          :value="header[name].toString()"/>
+                        v-for="name in Object.keys(header).filter(e=>!$store.state['message-prop']['ignoredMessageHeaderProps'].includes(e))">
+                    <Chip :filterOnTrash="true"
+                          :copy="true"
+                          color="green"
+                          :name="`${name.toString()}`"
+                          :value="header[name].toString()"
+                          :onTrash="()=> $store.commit('message-prop/addIgnoreMessageHeaderProp', name)"
+                    />
                 </template>
             </template>
         </div>
@@ -57,9 +68,6 @@
         props: {
             row: Object
         },
-        computed: {},
-        mounted: function () {
-        },
         methods: {
             mouseover: function () {
                 this.hovered = true;
@@ -83,8 +91,7 @@
 
     .card {
         margin: 0 10px 0 10px;
-        box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.3);
-        transition: 0.05s;
+        box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.5);
         border-radius: 10px; /* 5px rounded corners */
     }
 

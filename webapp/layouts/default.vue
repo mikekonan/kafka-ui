@@ -1,7 +1,5 @@
 <template>
-    <div>
-        <nuxt/>
-    </div>
+    <nuxt/>
 </template>
 
 <script>
@@ -11,14 +9,6 @@
         components: {},
         mounted() {
             document.querySelector('body').className = "background"
-        },
-        data() {
-            return {}
         }
     };
-
 </script>
-
-<style>
-
-</style>

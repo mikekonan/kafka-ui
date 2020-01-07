@@ -12,11 +12,11 @@ module.exports = {
         ]
     },
     plugins: [
-        '@/plugins/server/element-ui',
-        '@/plugins/server/spinner',
+        {src: '@/plugins/client/element-ui', mode: 'client'},
         {src: '@/plugins/client/json-editor', mode: 'client'},
         {src: '@/plugins/client/clipboard', mode: 'client'},
         {src: '@/plugins/client/screen-size', mode: 'client'},
+        {src: '@/plugins/client/sub.js', mode: 'client'},
     ],
     css: [
         'element-ui/lib/theme-chalk/reset.css',
@@ -24,8 +24,13 @@ module.exports = {
         '~/assets/transition.css'
     ],
     modules: [
-        '@neneos/nuxt-animate.css'
+        '@neneos/nuxt-animate.css',
+        '@nuxtjs/proxy',
     ],
+    proxy: {
+        '/messages': 'http://127.0.0.1:3001/',
+        '/topics': 'http://127.0.0.1:3001/'
+    },
     loading: {color: '#3B8070'},
     build: {
         extend(config, {isDev, isClient}) {

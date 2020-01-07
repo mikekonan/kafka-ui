@@ -1,7 +1,8 @@
 <template>
     <div>
         <SendDialog :closedFunc="()=>{this.showSendDialog=false}" :show="showSendDialog"/>
-        <SettingsDialog :splitMode="splitMode" :closedFunc="()=>{this.showSettingsDialog=false}"
+        <SettingsDialog :splitMode="this.splitMode"
+                        :closedFunc="()=>{this.showSettingsDialog=false}"
                         :show="showSettingsDialog"/>
 
         <div class="buttons secondary-background">
@@ -20,15 +21,16 @@
         <el-row :gutter="10">
             <transition enter-active-class="animated slideInRight"
                         leave-active-class="animated slideOutRight">
-                <el-col ref="first" :span="!!!this.$store.state['split-view']['splitMode'] ? 24: 12">
-                    <MessagesView/>
+                <el-col ref="first"
+                        :span="this.splitMode ? 12: 24">
+                    <MessagesContainer store="store1"/>
                 </el-col>
             </transition>
 
             <transition enter-active-class="animated slideInRight"
                         leave-active-class="animated slideOutRight">
-                <el-col ref="second" v-show="!!this.$store.state['split-view']['splitMode']" :span="12">
-                    <MessagesView/>
+                <el-col ref="second" v-show="this.splitMode" :span="12">
+                    <MessagesContainer store="store2"/>
                 </el-col>
             </transition>
         </el-row>
@@ -36,16 +38,19 @@
 </template>
 
 <script>
-    import TopicsView from "@/views/TopicsView";
-    import MessagesView from "@/views/MessagesView";
-    import SendDialog from '@/components/SendDialog.vue';
-    import SettingsDialog from "@/components/SettingsDialog";
+    import MessagesContainer from "../components/message/MessagesContainer";
+    import SendDialog from '../components/dialog/SendDialog.vue';
+    import SettingsDialog from "../components/dialog/SettingsDialog";
 
     export default {
+        computed: {
+            splitMode: function () {
+                return !!this.$store.state.messages['store1'].isActive && !!this.$store.state.messages['store2'].isActive;
+            }
+        },
         components: {
             SettingsDialog,
-            MessagesView,
-            TopicsView,
+            MessagesContainer,
             SendDialog
         },
         methods: {
@@ -57,15 +62,21 @@
             }
         },
         mounted: function () {
+            this.$sub(
+                'topics',
+                null,
+                () => this.$store.commit(`topics/truncate`),
+                (msg) => this.$store.commit(`topics/add`, msg),
+                (err) => this.$notify.error({
+                    title: 'Error',
+                    message: err
+                })
+            )
         },
         data() {
             return {
                 showSendDialog: false,
                 showSettingsDialog: false,
-                messageOffsets: [0, 1321313],
-                topicsLoading: true,
-                messagesLoading: false,
-                topicSearchInput: "",
             }
         }
     };

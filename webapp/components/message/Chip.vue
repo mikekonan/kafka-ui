@@ -1,25 +1,17 @@
 <template>
     <div class="chip">
         <div @click="copyName" :style="`background-color: ${colors[color]}`" class="key">{{name}}</div>
-        <span v-if="!!value" @click="copyValue">
+        <span style="color: #51422E;" v-if="!!value" @click="copyValue">
               {{value}}
         </span>
         <div class="trash-stub"></div>
-        <div style="color :black;" @click="ignore" class="trash el-icon-delete"></div>
+        <div style="color: #51422E;" @click="onTrash" class="trash el-icon-delete"></div>
     </div>
 </template>
 
 <script>
     export default {
         methods: {
-            ignore: function () {
-                if (!!this.filterOnTrash) {
-                    this.$store.commit('message-prop/addIgnoreProp', this.name);
-                    return
-                }
-
-                this.$store.commit('message-prop/rmIgnoreProp', this.name);
-            },
             copyName: function () {
                 if (!!this.copy) {
                     this.$copyText(this.name).catch(e => console.log(e));
@@ -33,6 +25,7 @@
         },
         components: {},
         props: {
+            onTrash: Function,
             filterOnTrash: Boolean,
             copy: Boolean,
             name: String,

@@ -1,0 +1,10 @@
+{
+  "name": "provider",
+  "version": "1.0.0",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "4.17.1",
+    "log4js": "^6.1.0",
+    "uuid": "^3.3.3"
+  }
+}
