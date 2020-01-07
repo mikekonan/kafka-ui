@@ -40,7 +40,7 @@ export const mutations = {
     },
     setSubConn(state, val) {
         if (state[val.store].subConn != null) {
-            console.warn(`[${val.store}]sub connection is not closed`);
+            console.warn(`[${val.store}] sub connection is not closed`);
         }
 
         state[val.store].subConn = val.subConn;

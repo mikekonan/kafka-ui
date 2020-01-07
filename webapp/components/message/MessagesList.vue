@@ -10,13 +10,14 @@
                     ref="messages"
                     enter-active-class="animated slideInLeft anim-fast"
                     leave-active-class="animated slideOutRight anim-fast" tag="div">
-                <div v-for="row in this.$store.state.messages[this.store].messages" v-bind:key="row.offset">
+                <div v-for="row in this.messages.sort((m1,m2)=> m2.offset-m1.offset)"
+                     v-bind:key="row.offset">
                     <MessageRow :row="row"/>
                 </div>
             </transition-group>
 
             <div ref="messagesPlaceholder" v-else>
-                <div v-for="i in  Array(20).fill().map((x,i)=>i)" v-bind:key="i.toString()">
+                <div v-for="i in  Array(50).fill().map((x,i)=>i)" v-bind:key="i.toString()">
                     <MessageRowPlaceholder/>
                 </div>
             </div>
@@ -30,6 +31,9 @@
 
     export default {
         computed: {
+            messages: function () {
+                return JSON.parse(JSON.stringify(this.$store.state.messages[this.store].messages));
+            },
             isActive: function () {
                 return this.$store.state.messages[this.store].isActive;
             },
@@ -88,7 +92,7 @@
 
                 let limit = 50;
 
-                return self.$sub('messages', `topic=${this.topic}&search=${this.search}`,
+                return setTimeout(() => self.$sub('messages', `topic=${this.topic}&search=${this.search}`,
                     () => {
                         self.$store.commit(`messages/truncateMsgs`, {store: this.store});
                         self.$store.commit(`messages/setRefreshing`, {store: this.store, refreshing: false});
@@ -109,7 +113,7 @@
                                 self.$store.commit(`messages/setSubConn`, {store: this.store, subConn: conn})
                             }
                         }
-                    );
+                    ), 750);
             }
         },
     }

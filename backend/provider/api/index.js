@@ -1,6 +1,7 @@
 const express = require('express');
 const uuid = require('uuid/v4');
 const logger = require('../lib/logger')('api');
+const Rethink = require("../lib/rethink");
 
 const connStore = {};
 
@@ -9,6 +10,8 @@ const head = {
     'Cache-Control': 'no-cache',
     'X-Content-Type-Options': 'nosniff'
 };
+
+const write = (writable, obj) => writable.write(`data: ${JSON.stringify(obj)}\n\n`);
 
 const app = express();
 
@@ -50,6 +53,9 @@ let mock = {
     "topic": "choreographer.update-merchant"
 };
 
+let toRethinkTableName = (name) => name.replace(".", "_dot_").replace("-", "_hyphen_");
+let fromRethinkTableName = (name) => name.replace("_dot_", ".").replace("_hyphen_", "-");
+
 app.get('/messages', (req, res) => {
     res.writeHead(200, head);
 
@@ -58,16 +64,32 @@ app.get('/messages', (req, res) => {
     logger.info(`processing GET /messages for '${id}'`);
     connStore[id] = res;
 
-    (function theLoop() {
-        setTimeout(() => {
-            mock.offset++;
-            res.write(`data: ${JSON.stringify(mock)}\n\n`);
-            theLoop()
-        }, 2500);
-    })();
+    const rethink = new Rethink({db: "topics"});
+    rethink.connect()
+        .then(() => rethink.changes(
+            {
+                table: toRethinkTableName("choreographer_dot_update_hyphen_merchant"),
+                limit: 20,
+                orderBy: 'offset',
+                onRow: (err, data) => {
+                    if (!!err) {
+                        res.connection.destroy();
+                        rethink.close();
+                        return
+                    }
+
+                    write(res, data['new_val']);
+                }
+            }))
+        .catch(err => {
+            logger.error(err);
+            res.connection.destroy();
+            rethink.close();
+        });
 
     req.on('close', () => {
         logger.info(`${id} connection closed`);
+        rethink.close();
         connStore[id] = undefined;
     });
 });
@@ -80,14 +102,32 @@ app.get('/topics', (req, res) => {
     logger.info(`processing GET /topics for '${id}'`);
     connStore[id] = res;
 
-    let obj = {topic: 'topic1'};
-    let obj2 = {topic: 'topic2'};
+    const rethink = new Rethink({db: "rethinkdb"});
+    rethink.connect()
+        .then(() => rethink.changes(
+            {
+                table: "table_config",
+                onRow: (err, data) => {
+                    if (!!err) {
+                        res.connection.destroy();
+                        rethink.close();
+                        return
+                    }
 
-    res.write(`data: ${JSON.stringify(obj)}\n\n`);
-    res.write(`data: ${JSON.stringify(obj2)}\n\n`);
+                    if (data['new_val'].db === "topics") {
+                        write(res, {topic: fromRethinkTableName(data['new_val'].name)});
+                    }
+                }
+            }))
+        .catch(err => {
+            logger.error(err);
+            res.connection.destroy();
+            rethink.close();
+        });
 
     req.on('close', () => {
         logger.info(`${id} connection closed`);
+        rethink.close();
         connStore[id] = undefined;
     });
 });
@@ -96,4 +136,3 @@ app.get('/topics', (req, res) => {
 let port = 3001;
 
 app.listen(port, () => logger.info(`api listening on ${port}`));
-

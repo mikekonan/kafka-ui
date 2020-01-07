@@ -62,8 +62,6 @@
                 this.$store.commit(`messages/setSearch`, {store: this.store, search: val});
             }
         },
-        mounted: function () {
-        },
         components: {
             MessagesList,
         },

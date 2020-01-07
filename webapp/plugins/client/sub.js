@@ -129,7 +129,9 @@ let sub = function (subj, query, onStart, onMsg, onErr) {
             }).catch(e => self.errHandler(e));
 
     self.close = () => {
-        self.conn.close();
+        if (!!self.conn) {
+            self.conn.close();
+        }
         self.conn = null;
     };
 
