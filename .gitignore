@@ -1,5 +1,6 @@
 .idea
 webapp/.nuxt
 webapp/node_modules
-piper/node_modules
+backend/piper/node_modules
+backend/provider/node_modules
 data
