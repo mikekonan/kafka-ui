@@ -38,19 +38,6 @@ export const mutations = {
     setIsActive(state, val) {
         state[val.store].isActive = val.isActive
     },
-    setSubConn(state, val) {
-        if (state[val.store].subConn != null) {
-            console.warn(`[${val.store}] sub connection is not closed`);
-        }
-
-        state[val.store].subConn = val.subConn;
-    },
-    stopSubConn(state, val) {
-        if (state[val.store].subConn != null && !state[val.store].subConn.closed) {
-            state[val.store].subConn.stop();
-            state[val.store].subConn = null
-        }
-    },
     setSearch(state, val) {
         state[val.store].search = val.search
     }

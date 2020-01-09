@@ -122,6 +122,10 @@ let sub = function (subj, query, onStart, onMsg, onErr) {
                 });
 
                 self.conn.subscribe('', (msg) => {
+                    if (!!msg.ping) {
+                        return
+                    }
+
                     onMsg(msg)
                 });
 
@@ -132,6 +136,7 @@ let sub = function (subj, query, onStart, onMsg, onErr) {
         if (!!self.conn) {
             self.conn.close();
         }
+
         self.conn = null;
     };
 

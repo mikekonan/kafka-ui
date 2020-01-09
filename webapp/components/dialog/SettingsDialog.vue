@@ -38,8 +38,6 @@
 
                 if (newVal === "One tab") {
                     this.$store.commit('messages/setIsActive', {store: "store2", isActive: false});
-                    this.$store.commit('messages/stopSubConn', {store: "store2"});
-
                     return
                 }
 

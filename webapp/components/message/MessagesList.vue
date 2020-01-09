@@ -79,6 +79,11 @@
         props: {
             store: String,
         },
+        data: function () {
+            return {
+                subConn: null
+            }
+        },
         methods: {
             start: function () {
                 if (!!!this.isActive || !!!this.topic) {
@@ -87,7 +92,10 @@
 
                 let self = this;
 
-                self.$store.commit(`messages/stopSubConn`, {store: this.store});
+                if (!!self.conn) {
+                    self.conn.stop();
+                }
+
                 self.$store.commit(`messages/setRefreshing`, {store: this.store, refreshing: true});
 
                 let limit = 50;
@@ -110,10 +118,10 @@
                     }))
                     .then(conn => {
                             if (!!conn) {
-                                self.$store.commit(`messages/setSubConn`, {store: this.store, subConn: conn})
+                                self.subConn = conn;
                             }
                         }
-                    ), 750);
+                    ), 300);
             }
         },
     }
