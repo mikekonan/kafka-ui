@@ -103,7 +103,7 @@ let sub = function (subj, query, onStart, onMsg, onErr) {
     self.conn = null;
     self.closed = false;
     self.connect = () =>
-        connect(`/${subj}${!!query ? `?q=${query}` : ''}`, {format: 'json'})
+        connect(`/${subj}${!!query ? `?${query}` : ''}`, {format: 'json'})
             .then(conn => {
                 if (self.closed) {
                     return Promise.resolve(null)

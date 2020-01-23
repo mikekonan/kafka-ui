@@ -3,11 +3,14 @@ const uuid = require('uuid/v4');
 const logger = require('./lib/logger')('api');
 const Rethink = require("./lib/rethink");
 
+const port = process.env.PORT || 3001;
+
 const head = {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
     'X-Content-Type-Options': 'nosniff'
 };
+
 const aliveMsg = {ping: true};
 
 const write = (writable, obj) => writable.write(`data: ${JSON.stringify(obj)}\n\n`);
@@ -31,7 +34,7 @@ app.get('/messages', (req, res) => {
             writeEvery(15000, res, aliveMsg);
             rethink.changes(
                 {
-                    table: toRethinkTableName("choreographer_dot_update_hyphen_merchant"),
+                    table: toRethinkTableName(req.query.topic),
                     limit: 20,
                     orderBy: 'offset',
                     onRow: (err, data) => {
@@ -98,8 +101,5 @@ app.get('/topics', (req, res) => {
         rethink.close();
     });
 });
-
-
-let port = 3001;
 
 app.listen(port, () => logger.info(`api listening on ${port}`));

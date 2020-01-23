@@ -1,7 +1,7 @@
 export const state = () => ({
     store1: {
         messages: [],
-        refreshing: true,
+        refreshing: false,
         topic: null,
         isActive: true,
         notificationPosition: "top-left",
@@ -10,7 +10,7 @@ export const state = () => ({
     },
     store2: {
         messages: [],
-        refreshing: true,
+        refreshing: false,
         topic: null,
         isActive: false,
         notificationPosition: "top-right",

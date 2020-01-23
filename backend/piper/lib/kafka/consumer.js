@@ -13,7 +13,7 @@ const errListener = (listener, event, cb) => {
 };
 
 class MessageReader extends Readable {
-    constructor({host = 'kafka', group = 'kafka-ui-messages-fetch', topics} = {}) {
+    constructor({host = '127.0.0.1', group = 'kafka-ui-messages-fetch', topics} = {}) {
         super({objectMode: true});
         const self = this;
 

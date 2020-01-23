@@ -2,7 +2,7 @@ const Promise = require("bluebird");
 const logger = require('../logger')('topics-consumer');
 const {KafkaConsumer} = require('node-rdkafka');
 
-module.exports = function (host = 'kafka', group = 'kafka-ui-topic-fetch', keepalive = false, smallestOffset = false, persistOffset = false,
+module.exports = function (host = '127.0.0.1', group = 'kafka-ui-topic-fetch', keepalive = false, smallestOffset = false, persistOffset = false,
                            ignoreTopics = ['__consumer_offsets']) {
     const self = this;
 

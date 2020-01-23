@@ -92,36 +92,37 @@
 
                 let self = this;
 
-                if (!!self.conn) {
-                    self.conn.stop();
+                if (!!self.subConn) {
+                    self.subConn.stop();
                 }
 
-                self.$store.commit(`messages/setRefreshing`, {store: this.store, refreshing: true});
+                self.$store.commit(`messages/setRefreshing`, {store: self.store, refreshing: true});
 
                 let limit = 50;
 
-                return setTimeout(() => self.$sub('messages', `topic=${this.topic}&search=${this.search}`,
-                    () => {
-                        self.$store.commit(`messages/truncateMsgs`, {store: this.store});
-                        self.$store.commit(`messages/setRefreshing`, {store: this.store, refreshing: false});
-                    },
-                    (msg) => {
-                        self.$store.commit(`messages/addMsg`, {store: this.store, msg: msg});
+                return setTimeout(() =>
+                    self.$sub('messages', `topic=${this.topic}&search=${this.search}`,
+                        () => {
+                            self.$store.commit(`messages/truncateMsgs`, {store: self.store});
+                            self.$store.commit(`messages/setRefreshing`, {store: self.store, refreshing: false});
+                        },
+                        (msg) => {
+                            self.$store.commit(`messages/addMsg`, {store: self.store, msg: msg});
 
-                        if (self.$store.state.messages[this.store].messages.length === limit + 1) {
-                            self.$store.commit(`messages/popMsg`, {store: this.store});
-                        }
-                    },
-                    (err) => self.$notify.error({
-                        title: 'Error',
-                        message: err
-                    }))
-                    .then(conn => {
-                            if (!!conn) {
-                                self.subConn = conn;
+                            if (self.$store.state.messages[self.store].messages.length === limit + 1) {
+                                self.$store.commit(`messages/popMsg`, {store: self.store});
                             }
-                        }
-                    ), 300);
+                        },
+                        (err) => self.$notify.error({
+                            title: 'Error',
+                            message: err
+                        }))
+                        .then(conn => {
+                                if (!!conn) {
+                                    self.subConn = conn;
+                                }
+                            }
+                        ), 500000);
             }
         },
     }

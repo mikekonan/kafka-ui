@@ -5,7 +5,9 @@
                 <el-select @change="onTopicChange" size="small" style="width: 100%; margin-top: 5px;"
                            :value="this.$store.state.messages[this.store].topic"
                            filterable
-                           placeholder="Select a topic">
+                           placeholder="Select a topic"
+                           :disabled="this.$store.state.messages[this.store].refreshing"
+                >
                     <el-option v-for="item in $store.state.topics.topics"
                                :key="item"
                                :label="item"

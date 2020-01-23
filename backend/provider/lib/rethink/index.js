@@ -33,7 +33,6 @@ class Rethink {
         return query.changes({includeInitial: true})
             .run(this.conn, (err, cursor) => {
                 if (!!err) {
-                    cursor.close();
                     logger.error(err);
                     return
                 }
