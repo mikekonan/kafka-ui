@@ -12,7 +12,7 @@ const errListener = (listener, event, cb) => {
     )
 };
 
-class MessageReader extends Readable {
+class Consumer extends Readable {
     constructor({host = '127.0.0.1', group = 'kafka-ui-messages-fetch', topics} = {}) {
         super({objectMode: true});
         const self = this;
@@ -96,4 +96,4 @@ class MessageReader extends Readable {
     }
 }
 
-module.exports = MessageReader;
+module.exports = Consumer;

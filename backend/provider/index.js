@@ -3,7 +3,7 @@ const uuid = require('uuid/v4');
 const logger = require('./lib/logger')('api');
 const Rethink = require("./lib/rethink");
 
-const port = process.env.PORT || 3001;
+const port = process.env.PROVIDER_PORT || 3001;
 
 const head = {
     'Content-Type': 'text/event-stream',
@@ -28,7 +28,7 @@ app.get('/messages', (req, res) => {
 
     logger.info(`processing GET /messages for '${id}'`);
 
-    const rethink = new Rethink({db: "topics"});
+    const rethink = new Rethink({host: process.env.RETHINK_HOST || '127.0.0.1', db: "topics"});
     rethink.connect()
         .then(() => {
             writeEvery(15000, res, aliveMsg);
@@ -68,7 +68,7 @@ app.get('/topics', (req, res) => {
 
     logger.info(`processing GET /topics for '${id}'`);
 
-    const rethink = new Rethink({db: "rethinkdb"});
+    const rethink = new Rethink({host: process.env.RETHINK_HOST || '127.0.0.1', db: "rethinkdb"});
     rethink.connect()
         .then(() => {
             writeEvery(15000, res, aliveMsg);

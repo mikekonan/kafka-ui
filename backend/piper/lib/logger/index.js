@@ -13,8 +13,8 @@ log4js.configure({
     categories: {
         default: {
             appenders: ['out'],
-            level: 'debug',
-            // level: 'info',
+            // level: 'debug',
+            level: 'info',
             enableCallStack: true
         }
     }
