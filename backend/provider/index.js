@@ -4,6 +4,7 @@ const logger = require('./lib/logger')('api');
 const Rethink = require("./lib/rethink");
 
 const port = process.env.PROVIDER_PORT || 3001;
+const rethinkHost = process.env.RETHINK_HOST || '127.0.0.1';
 
 const head = {
     'Content-Type': 'text/event-stream',
@@ -13,8 +14,17 @@ const head = {
 
 const aliveMsg = {ping: true};
 
-const write = (writable, obj) => writable.write(`data: ${JSON.stringify(obj)}\n\n`);
-const writeEvery = (timeout, writable, obj) => setInterval(() => write(writable, obj), timeout);
+const write = (writable, obj) => {
+    logger.info(`writing ${JSON.stringify(obj)}`)
+    if (!!writable) {
+        writable.write(`data: ${JSON.stringify(obj)}\n\n`)
+        writable.flush();
+    }
+};
+
+const writeEvery = (timeout, writable, obj) => {
+    return setInterval(() => write(writable, obj), timeout)
+};
 
 let toRethinkTableName = (name) => name.replace(".", "_dot_").replace("-", "_hyphen_");
 let fromRethinkTableName = (name) => name.replace("_dot_", ".").replace("_hyphen_", "-");
@@ -25,13 +35,16 @@ app.get('/messages', (req, res) => {
     res.writeHead(200, head);
 
     let id = uuid();
+    let interval;
 
     logger.info(`processing GET /messages for '${id}'`);
+    let closedByClient = false;
 
-    const rethink = new Rethink({host: process.env.RETHINK_HOST || '127.0.0.1', db: "topics"});
+    const rethink = new Rethink({host: rethinkHost, db: "topics"});
     rethink.connect()
         .then(() => {
-            writeEvery(15000, res, aliveMsg);
+            interval = writeEvery(15000, res, aliveMsg);
+
             rethink.changes(
                 {
                     table: toRethinkTableName(req.query.topic),
@@ -39,6 +52,10 @@ app.get('/messages', (req, res) => {
                     orderBy: 'offset',
                     onRow: (err, data) => {
                         if (!!err) {
+                            if (closedByClient) {
+                                return
+                            }
+
                             res.connection.destroy();
                             rethink.close();
                             logger.error(err);
@@ -50,14 +67,19 @@ app.get('/messages', (req, res) => {
                 })
         })
         .catch(err => {
-            logger.error(err);
-            res.connection.destroy();
-            rethink.close();
+            if (!closedByClient) {
+                clearInterval(interval);
+                logger.error(err);
+                res.connection.destroy();
+                rethink.close();
+            }
         });
 
     req.on('close', () => {
-        logger.info(`${id} connection closed`);
+        clearInterval(interval);
+        logger.info(`${id} connection closed by client`);
         rethink.close();
+        closedByClient = true;
     });
 });
 
@@ -65,19 +87,26 @@ app.get('/topics', (req, res) => {
     res.writeHead(200, head);
 
     let id = uuid();
+    let interval;
+    let closedByClient = false;
 
     logger.info(`processing GET /topics for '${id}'`);
 
-    const rethink = new Rethink({host: process.env.RETHINK_HOST || '127.0.0.1', db: "rethinkdb"});
+    const rethink = new Rethink({host: rethinkHost, db: "rethinkdb"});
+
     rethink.connect()
         .then(() => {
-            writeEvery(15000, res, aliveMsg);
+            interval = writeEvery(15000, res, aliveMsg);
 
             rethink.changes(
                 {
                     table: "table_config",
                     onRow: (err, data) => {
                         if (!!err) {
+                            if (closedByClient) {
+                                return
+                            }
+
                             res.connection.destroy();
                             rethink.close();
                             logger.error(err);
@@ -91,14 +120,19 @@ app.get('/topics', (req, res) => {
                 })
         })
         .catch(err => {
-            logger.error(err);
-            res.connection.destroy();
-            rethink.close();
+            if (!closedByClient) {
+                clearInterval(interval);
+                logger.error(err);
+                res.connection.destroy();
+                rethink.close();
+            }
         });
 
     req.on('close', () => {
-        logger.info(`${id} connection closed`);
+        clearInterval(interval);
+        logger.info(`${id} connection closed by client`);
         rethink.close();
+        closedByClient = true;
     });
 });
 

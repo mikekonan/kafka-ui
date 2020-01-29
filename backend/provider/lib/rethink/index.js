@@ -2,16 +2,22 @@ const r = require('rethinkdb');
 const logger = require('../logger')('rethink');
 
 class Rethink {
-    constructor({host = '127.0.0.1', port = 28015, db = 'topics'} = {}) {
+    constructor(
+        {
+            host = '127.0.0.1',
+            port = 28015,
+            db = 'topics'
+        } = {}) {
         this.conf = {db: db, host: host, port: port};
     }
 
     connect() {
-        return r.connect(this.conf)
+        let self = this;
+        return r.connect(self.conf)
             .catch(err => Promise.reject(err))
             .then(conn => {
-                this.conn = conn;
-                logger.info("connected");
+                self.conn = conn;
+                logger.info(`connected to ${JSON.stringify(self.conf)}`);
                 return Promise.resolve(conn);
             })
     };

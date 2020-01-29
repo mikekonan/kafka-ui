@@ -35,7 +35,7 @@ class Consumer extends Readable {
 
                 self.consumer.connect();
 
-                ['connection.failure', 'error', 'event.error']
+                ['connection.failure', 'error']
                     .forEach(e => errListener(self.consumer, e, () => self._destroy()));
 
                 self.consumer

@@ -8,8 +8,6 @@ RUN apt-get update && apt-get install -y lsb-release apt-transport-https \
     && rm -rf /var/lib/apt/lists/* \
     && npm i -g concurrently
 
-VOLUME ["/data"]
-
 COPY backend/piper /app/piper
 COPY backend/provider /app/provider
 COPY webapp /app/webapp
