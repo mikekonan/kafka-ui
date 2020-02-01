@@ -2,12 +2,11 @@ version: '3'
 
 services:
   kafka-ui:
-    image: kafka-ui
+    image: mikekonan/kafka-ui:latest
     container_name: kafka-ui
     volumes:
-      - ./data:/data
+      - ./kafka-ui/rethinkdb_data:/rethinkdb_data
     ports:
-      - 8089:8081
-      - 8080:8080
+      - 3005:3005
     environment:
-      KAFKA_HOST: "kafka.dckr"
+      KAFKA_HOST: "kafka"
