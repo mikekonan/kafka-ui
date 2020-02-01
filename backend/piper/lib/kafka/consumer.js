@@ -24,7 +24,7 @@ class Consumer extends Readable {
                     return
                 }
 
-                logger.info(`subscribing to topics - '${topics}'`);
+                logger.debug(`subscribing to topics - '${topics}'`);
 
                 self.consumer = new KafkaConsumer({
                         'group.id': group,

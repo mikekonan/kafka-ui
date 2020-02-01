@@ -15,7 +15,7 @@ const head = {
 const aliveMsg = {ping: true};
 
 const write = (writable, obj) => {
-    logger.info(`writing ${JSON.stringify(obj)}`)
+    logger.debug(`writing ${JSON.stringify(obj)}`)
     if (!!writable) {
         writable.write(`data: ${JSON.stringify(obj)}\n\n`)
         writable.flush();
@@ -75,7 +75,7 @@ app.get('/messages', (req, res) => {
             }
         });
 
-    req.on('close', () => {
+    res.on('close', () => {
         clearInterval(interval);
         logger.info(`${id} connection closed by client`);
         rethink.close();
@@ -128,7 +128,7 @@ app.get('/topics', (req, res) => {
             }
         });
 
-    req.on('close', () => {
+    res.on('close', () => {
         clearInterval(interval);
         logger.info(`${id} connection closed by client`);
         rethink.close();

@@ -25,12 +25,7 @@ module.exports = {
     ],
     modules: [
         '@neneos/nuxt-animate.css',
-        '@nuxtjs/proxy',
     ],
-    proxy: {
-        '/messages': 'http://127.0.0.1:3001',
-        '/topics': 'http://127.0.0.1:3001'
-    },
     loading: {color: '#3B8070'},
     build: {
         extend(config, {isDev, isClient}) {
