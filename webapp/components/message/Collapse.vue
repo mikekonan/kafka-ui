@@ -44,7 +44,7 @@
         },
         methods: {
             copyJson: function () {
-                this.$copyText(JSON.stringify(this.obj, null, 4)).catch(e => console.log(e));
+                this.$copyText(JSON.stringify(this.obj, null, 4)).catch(err => console.error(err));
             },
             copyMouseover: function () {
                 return Velocity(this.$refs.copyButton, {scale: 1.2}, {duration: 50})

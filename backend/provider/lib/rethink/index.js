@@ -28,8 +28,16 @@ class Rethink {
 
     changes(req) {
         let query = r.db(this.conf.db).table(req.table);
+
         if (!!req.orderBy) {
             query = query.orderBy({index: r.desc(req.orderBy)});
+        }
+
+        if (req.maxOffset !== undefined && req.minOffset !== undefined &&
+            !Number.isNaN(req.maxOffset) && !Number.isNaN(req.minOffset)) {
+            query = query.filter(function (row) {
+                return row("offset").le(req.maxOffset).and(row("offset").ge(req.minOffset))
+            });
         }
 
         if (!!req.limit) {
@@ -55,4 +63,5 @@ class Rethink {
     };
 }
 
-module.exports = Rethink;
+module
+    .exports = Rethink;

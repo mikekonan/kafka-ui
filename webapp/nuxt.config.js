@@ -17,6 +17,7 @@ module.exports = {
         {src: '@/plugins/client/clipboard', mode: 'client'},
         {src: '@/plugins/client/screen-size', mode: 'client'},
         {src: '@/plugins/client/sub.js', mode: 'client'},
+        {src: '@/plugins/client/lodash.js', mode: 'client'},
     ],
     css: [
         'element-ui/lib/theme-chalk/reset.css',

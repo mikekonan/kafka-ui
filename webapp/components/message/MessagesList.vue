@@ -31,6 +31,9 @@
 
     export default {
         computed: {
+            offsetActive: function () {
+                return this.$store.state.messages[this.store].offsetActive;
+            },
             messages: function () {
                 return JSON.parse(JSON.stringify(this.$store.state.messages[this.store].messages));
             },
@@ -42,7 +45,13 @@
             },
             search: function () {
                 return this.$store.state.messages[this.store].search;
-            }
+            },
+            minOffset: function () {
+                return this.$store.state.messages[this.store].minOffset;
+            },
+            maxOffset: function () {
+                return this.$store.state.messages[this.store].maxOffset;
+            },
         },
         watch: {
             isActive: {
@@ -70,22 +79,35 @@
                 handler: function () {
                     this.start();
                 }
+            },
+            minOffset: function () {
+                this.start();
+            },
+            maxOffset: function () {
+                this.start();
+            },
+            offsetActive: function (val) {
+                if (!val) {
+                    this.start();
+                }
             }
         },
         components: {
             MessageRow,
             MessageRowPlaceholder
-        },
+        }
+        ,
         props: {
             store: String,
         },
         data: function () {
             return {
+                starting: false,
                 subConn: null
             }
         },
         methods: {
-            start: function () {
+            start: _.debounce(function () {
                 if (!!!this.isActive || !!!this.topic) {
                     return
                 }
@@ -100,15 +122,18 @@
 
                 let limit = 50;
 
+                let query = `topic=${this.topic}`;
+                query += !!this.search ? `&search=${this.search}` : ``;
+                query += !!this.offsetActive ? `&minOffset=${this.minOffset}&maxOffset=${this.maxOffset}` : ``;
+
                 return setTimeout(() =>
-                    self.$sub('messages', `topic=${this.topic}&search=${this.search}`,
+                    self.$sub('messages', query,
                         () => {
                             self.$store.commit(`messages/truncateMsgs`, {store: self.store});
                             self.$store.commit(`messages/setRefreshing`, {store: self.store, refreshing: false});
                         },
                         (msg) => {
                             self.$store.commit(`messages/addMsg`, {store: self.store, msg: msg});
-
                             if (self.$store.state.messages[self.store].messages.length === limit + 1) {
                                 self.$store.commit(`messages/popMsg`, {store: self.store});
                             }
@@ -122,8 +147,8 @@
                                     self.subConn = conn;
                                 }
                             }
-                        ), 1500);
-            }
+                        ), 500);
+            }, 1000)
         },
     }
 </script>

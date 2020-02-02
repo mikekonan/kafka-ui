@@ -14,12 +14,12 @@
         methods: {
             copyName: function () {
                 if (!!this.copy) {
-                    this.$copyText(this.name).catch(e => console.log(e));
+                    this.$copyText(this.name).catch(err => console.error(err));
                 }
             },
             copyValue: function () {
                 if (!!this.copy) {
-                    this.$copyText(this.value).catch(e => console.log(e));
+                    this.$copyText(this.value).catch(err => console.error(err));
                 }
             }
         },

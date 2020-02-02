@@ -2,7 +2,7 @@
     <el-card class="vld-parent background straight-secondary-border">
         <el-row :gutter="20">
             <el-col :span="6">
-                <el-select @change="onTopicChange" size="small" style="width: 100%; margin-top: 5px;"
+                <el-select @change="onTopicChange" size="small" style="width: 100%; margin-top: 0;"
                            :value="this.$store.state.messages[this.store].topic"
                            filterable
                            placeholder="Select a topic"
@@ -15,20 +15,37 @@
                     </el-option>
                 </el-select>
             </el-col>
-            <el-col :span="9">
-                <el-row :gutter="5">
+            <el-col :span="7">
+                <el-row style="width: 350px;" :gutter="10">
+
                     <div class="separated straight-secondary"></div>
-                    <el-col :span="4">
-                        <el-switch style="left: 5px; margin-top: 8px;" v-model="offsetEnabled"/>
+                    <el-col :span="2">
+                        <el-switch style="margin-top: 6px;" @change="setOffsetActive" :value="offsetActive"
+                                   :disabled="this.$store.state.messages[this.store].refreshing"
+                        />
                     </el-col>
-                    <el-col :span="20">
-                        <el-slider :disabled="!offsetEnabled" :min="minOffsetVal" :max="maxOffsetVal"
-                                   v-model="messageOffsets" range>
-                        </el-slider>
+                    <el-col style="margin-right: -10px; margin-left: 25px; margin-top: -14px;" :span="11">
+                        <el-row>
+                            <span>Min:</span>
+                        </el-row>
+                        <el-input-number
+                                @change="onMinOffsetChange" :disabled="!offsetActive" size="small"
+                                :value="minOffsetVal"
+                                :min="0"
+                                controls-position="right"/>
+                    </el-col>
+                    <el-col style="margin-right: -10px; margin-left: -5px; margin-top: -14px;" :span="11">
+                        <el-row>
+                            <span>Max:</span>
+                        </el-row>
+                        <el-input-number @change="onMaxOffsetChange" :disabled="!offsetActive" size="small"
+                                         :min="minOffsetVal"
+                                         :value="maxOffsetVal"
+                                         controls-position="right"/>
                     </el-col>
                 </el-row>
             </el-col>
-            <el-col :span="9">
+            <el-col :span="11">
                 <el-row>
                     <div class="separated straight-secondary"></div>
                     <el-input
@@ -53,6 +70,17 @@
     import MessagesList from './MessagesList.vue';
 
     export default {
+        computed: {
+            offsetActive: function () {
+                return this.$store.state.messages[this.store].offsetActive;
+            },
+            maxOffsetVal: function () {
+                return this.$store.state.messages[this.store].maxOffset;
+            },
+            minOffsetVal: function () {
+                return this.$store.state.messages[this.store].minOffset;
+            }
+        },
         props: {
             store: String,
         },
@@ -62,7 +90,25 @@
             },
             onSearchChange: function (val) {
                 this.$store.commit(`messages/setSearch`, {store: this.store, search: val});
-            }
+            },
+            onMinOffsetChange: function (val) {
+                this.$store.commit(`messages/setMinOffset`, {
+                    store: this.store,
+                    minOffset: val
+                });
+            },
+            onMaxOffsetChange: function (val) {
+                this.$store.commit(`messages/setMaxOffset`, {
+                    store: this.store,
+                    maxOffset: val
+                })
+            },
+            setOffsetActive: function (val) {
+                this.$store.commit(`messages/setOffsetActive`, {
+                    store: this.store,
+                    active: val
+                });
+            },
         },
         components: {
             MessagesList,
@@ -70,10 +116,6 @@
         data() {
             return {
                 search: "",
-                minOffsetVal: 0,
-                maxOffsetVal: 200,
-                offsetEnabled: false,
-                messageOffsets: [50, 150],
             }
         }
     };

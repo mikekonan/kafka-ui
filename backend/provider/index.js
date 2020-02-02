@@ -26,15 +26,25 @@ const writeEvery = (timeout, writable, obj) => {
     return setInterval(() => write(writable, obj), timeout)
 };
 
-let toRethinkTableName = (name) => name.replace(".", "_dot_").replace("-", "_hyphen_");
-let fromRethinkTableName = (name) => name.replace("_dot_", ".").replace("_hyphen_", "-");
+const toRethinkTableName = (name) => name.replace(".", "_dot_").replace("-", "_hyphen_");
+const fromRethinkTableName = (name) => name.replace("_dot_", ".").replace("_hyphen_", "-");
 
 const app = express();
 
 app.get('/messages', (req, res) => {
     res.writeHead(200, head);
 
-    let id = uuid();
+    const topic = req.query.topic;
+    if (!!!topic) {
+        logger.info("topic query param is not provided");
+        res.close();
+        return
+    }
+
+    const minOffset = Number.parseInt(req.query.minOffset, 10);
+    const maxOffset = Number.parseInt(req.query.maxOffset, 10);
+
+    const id = uuid();
     let interval;
 
     logger.info(`processing GET /messages for '${id}'`);
@@ -43,13 +53,16 @@ app.get('/messages', (req, res) => {
     const rethink = new Rethink({host: rethinkHost, db: "topics"});
     rethink.connect()
         .then(() => {
+            write(res, aliveMsg);
             interval = writeEvery(15000, res, aliveMsg);
 
             rethink.changes(
                 {
-                    table: toRethinkTableName(req.query.topic),
+                    table: toRethinkTableName(topic),
                     limit: 20,
                     orderBy: 'offset',
+                    minOffset: minOffset,
+                    maxOffset: maxOffset,
                     onRow: (err, data) => {
                         if (!!err) {
                             if (closedByClient) {
