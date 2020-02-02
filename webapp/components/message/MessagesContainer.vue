@@ -46,16 +46,16 @@
                 </el-row>
             </el-col>
             <el-col :span="11">
-                <el-row>
-                    <div class="separated straight-secondary"></div>
-                    <el-input
-                            @change="onSearchChange"
-                            size="small"
-                            placeholder="Search"
-                            v-model="search"
-                            clearable>
-                    </el-input>
-                </el-row>
+<!--                <el-row>-->
+<!--                    <div class="separated straight-secondary"></div>-->
+<!--                    <el-input-->
+<!--                            @change="onSearchChange"-->
+<!--                            size="small"-->
+<!--                            placeholder="Search"-->
+<!--                            v-model="search"-->
+<!--                            clearable>-->
+<!--                    </el-input>-->
+<!--                </el-row>-->
 
             </el-col>
         </el-row>

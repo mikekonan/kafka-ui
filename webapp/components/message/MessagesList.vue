@@ -1,27 +1,38 @@
 <template>
     <div ref="container" class="container" :style="`height: ${this.$vssHeight - 130}px;`">
-        <transition
-                enter-active-class="animated slideInRight anim-fast"
-                leave-active-class="animated slideOutLeft anim-fast"
-                v-if="isActive"
-        >
-            <transition-group
-                    v-if="!this.$store.state.messages[this.store].refreshing"
-                    ref="messages"
-                    enter-active-class="animated slideInLeft anim-fast"
-                    leave-active-class="animated slideOutRight anim-fast" tag="div">
-                <div v-for="row in this.messages.sort((m1,m2)=> m2.offset-m1.offset)"
-                     v-bind:key="row.offset">
-                    <MessageRow :row="row"/>
-                </div>
-            </transition-group>
-
-            <div ref="messagesPlaceholder" v-else>
-                <div v-for="i in  Array(50).fill().map((x,i)=>i)" v-bind:key="i.toString()">
-                    <MessageRowPlaceholder/>
-                </div>
+        <template v-if="this.messages.length === 0">
+            <div class="overlay">
+                <span class="centered"
+                      style="font-size: 24px;">{{!!!this.topic? `Please, select a topic...`:'No data'}}</span>
             </div>
-        </transition>
+            <div v-for="i in  Array(5).fill().map((x,i)=>i)" v-bind:key="i.toString()">
+                <MessageRowPlaceholder/>
+            </div>
+        </template>
+        <template v-else>
+            <transition
+                    enter-active-class="animated slideInRight anim-fast"
+                    leave-active-class="animated slideOutLeft anim-fast"
+                    v-if="isActive"
+            >
+                <transition-group
+                        v-if="!this.$store.state.messages[this.store].refreshing"
+                        ref="messages"
+                        enter-active-class="animated slideInLeft anim-fast"
+                        leave-active-class="animated slideOutRight anim-fast" tag="div">
+                    <div v-for="row in this.messages.sort((m1,m2)=> m2.offset-m1.offset)"
+                         v-bind:key="row.offset">
+                        <MessageRow :row="row"/>
+                    </div>
+                </transition-group>
+
+                <div v-else>
+                    <div v-for="i in  Array(5).fill().map((x,i)=>i)" v-bind:key="i.toString()">
+                        <MessageRowPlaceholder/>
+                    </div>
+                </div>
+            </transition>
+        </template>
     </div>
 </template>
 
@@ -57,72 +68,74 @@
             isActive: {
                 immediate: true,
                 handler: function (val) {
-                    if (!!val && !!!this.$store.state.messages[this.store].topic) {
-                        this.$notify.info({
-                            title: 'Topic selection',
-                            message: "Please, select a topic",
-                            position: this.$store.state.messages[this.store].notificationPosition,
-                        })
-                    }
+                    // if (!!val && !!!this.$store.state.messages[this.store].topic) {
+                    // this.$notify.info({
+                    //     title: 'Topic selection',
+                    //     message: "Please, select a topic",
+                    //     position: this.$store.state.messages[this.store].notificationPosition,
+                    // })
+                    // }
 
-                    this.start();
+                    this.ensureStarted(() => this.start());
                 }
             },
             topic: {
                 immediate: true,
                 handler: function () {
-                    this.start();
+                    this.ensureStarted(() => this.start());
                 }
             },
             search: {
                 immediate: true,
                 handler: function () {
-                    this.start();
+                    this.ensureStarted(() => this.start());
                 }
             },
             minOffset: function () {
-                this.start();
+                this.ensureStarted(() => this.start());
             },
             maxOffset: function () {
-                this.start();
+                this.ensureStarted(() => this.start());
             },
             offsetActive: function (val) {
                 if (!val) {
-                    this.start();
+                    this.ensureStarted(() => this.start());
                 }
             }
         },
         components: {
             MessageRow,
             MessageRowPlaceholder
-        }
-        ,
+        },
         props: {
             store: String,
         },
         data: function () {
             return {
-                starting: false,
                 subConn: null
             }
         },
         methods: {
-            start: _.debounce(function () {
+            ensureStarted: function (cb) {
                 if (!!!this.isActive || !!!this.topic) {
                     return
                 }
 
+                this.$store.commit(`messages/setRefreshing`, {store: this.store, refreshing: true});
+                if (!!cb) {
+                    cb();
+                }
+            },
+            start: _.debounce(function () {
                 let self = this;
 
                 if (!!self.subConn) {
                     self.subConn.stop();
                 }
 
-                self.$store.commit(`messages/setRefreshing`, {store: self.store, refreshing: true});
-
                 let limit = 50;
 
-                let query = `topic=${this.topic}`;
+                let query = `topic=${this.topic}&limit=${limit}`;
                 query += !!this.search ? `&search=${this.search}` : ``;
                 query += !!this.offsetActive ? `&minOffset=${this.minOffset}&maxOffset=${this.maxOffset}` : ``;
 
@@ -147,7 +160,7 @@
                                     self.subConn = conn;
                                 }
                             }
-                        ), 200);
+                        ), 800);
             }, 1000)
         },
     }
@@ -162,6 +175,31 @@
     }
 
     .anim-fast {
-        animation-duration: 250ms;
+        animation-duration: 400ms;
+    }
+
+    .overlay {
+        position: absolute; /* Sit on top of the page content */
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5); /* Black background with opacity */
+        z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+        cursor: pointer; /* Add a pointer on hover */
+        border-radius: 5px;
+    }
+
+    .centered {
+        -webkit-box-align: center;
+        -webkit-box-pack: center;
+        display: -webkit-box;
+
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        -ms-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
     }
 </style>
