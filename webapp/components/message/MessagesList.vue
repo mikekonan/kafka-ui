@@ -3,7 +3,9 @@
         <template v-if="this.messages.length === 0">
             <div class="overlay">
                 <span class="centered"
-                      style="font-size: 24px;">{{!!!this.topic? `Please, select a topic...`:'No data'}}</span>
+                      style="font-size: 24px;">
+                    {{!!!this.topic ? `Please, select a topic...` : !!!this.refreshing ? 'No data': ''}}
+                </span>
             </div>
             <div v-for="i in  Array(5).fill().map((x,i)=>i)" v-bind:key="i.toString()">
                 <MessageRowPlaceholder/>
@@ -16,7 +18,7 @@
                     v-if="isActive"
             >
                 <transition-group
-                        v-if="!this.$store.state.messages[this.store].refreshing"
+                        v-if="!this.refreshing"
                         ref="messages"
                         enter-active-class="animated slideInLeft anim-fast"
                         leave-active-class="animated slideOutRight anim-fast" tag="div">
@@ -63,6 +65,9 @@
             maxOffset: function () {
                 return this.$store.state.messages[this.store].maxOffset;
             },
+            refreshing: function () {
+                return this.$store.state.messages[this.store].refreshing;
+            }
         },
         watch: {
             isActive: {
