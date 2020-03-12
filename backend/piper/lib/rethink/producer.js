@@ -34,7 +34,7 @@ class RethinkProducer extends Writable {
     }
 
     _normalizeTableName(topic) {
-        return topic.replace(".", "_dot_").replace("-", "_hyphen_");
+        return topic.replace(/\./g, "_dot_").replace(/-/g, "_hyphen_");
     }
 
     _writeMsg(topic, message, callback) {

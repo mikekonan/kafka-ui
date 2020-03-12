@@ -26,8 +26,8 @@ const writeEvery = (timeout, writable, obj) => {
     return setInterval(() => write(writable, obj), timeout)
 };
 
-const toRethinkTableName = (name) => name.replace(".", "_dot_").replace("-", "_hyphen_");
-const fromRethinkTableName = (name) => name.replace("_dot_", ".").replace("_hyphen_", "-");
+const toRethinkTableName = (name) => name.replace(/\./g, "_dot_").replace(/-/g, "_hyphen_");
+const fromRethinkTableName = (name) => name.replace(/_dot_/g, ".").replace(/_hyphen_/g, "-");
 
 const app = express();
 
