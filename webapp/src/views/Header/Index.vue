@@ -1,6 +1,6 @@
 <template>
   <div style="display: flex; flex-direction: row">
-    <FilterWidget></FilterWidget>
+    <FilterWidget />
     <AppliedFiltersWidget
       style="
         margin-left: 10px;
@@ -23,16 +23,7 @@ export default {
     FilterWidget,
     AppliedFiltersWidget,
     Buttons
-  },
-  data() {
-    return {
-      topics: ["choreographer.create-user"],
-      topic: "",
-      operands: [">", "<", "<=", ">=", "=", "%"],
-      operand: "="
-    };
-  },
-  methods: {}
+  }
 };
 </script>
 

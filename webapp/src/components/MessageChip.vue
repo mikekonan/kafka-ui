@@ -8,7 +8,7 @@
       >
         {{ name }}
       </div>
-      <span class="message-chip-value" v-if="!!value" @click="copyValue">
+      <span class="message-chip-value" @click="copyValue">
         {{ value }}
       </span>
     </a>
@@ -17,9 +17,15 @@
 
 <script>
 export default {
+  methods: {
+    copyName: function () {
+      this.$copyText(this.name).catch((err) => console.error(err));
+    },
+    copyValue: function () {
+      this.$copyText(this.value).catch((err) => console.error(err));
+    }
+  },
   props: {
-    onTrash: Function,
-    filterOnTrash: Boolean,
     name: String,
     value: String,
     color: String

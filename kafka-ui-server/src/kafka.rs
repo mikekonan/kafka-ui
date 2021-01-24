@@ -151,32 +151,23 @@ impl Kafka {
                     let payload_str = &String::from_utf8_lossy(m.payload().unwrap()).trim().to_string();
                     let json_parse_result = RawValue::from_string(payload_str.to_string());
 
-                    match json_parse_result {
-                        Ok(result) => tokio::spawn(self.rethink.clone().write(
-                            rethink::InMessageRaw {
-                                topic: m.topic().to_string(),
-                                headers: headers_map,
-                                offset: m.offset(),
-                                partition: m.partition(),
-                                timestamp: m.timestamp().to_millis().unwrap(),
-                                at: reql_types::DateTime(Utc.timestamp_millis(m.timestamp().to_millis().unwrap())),
-                                payload_size: m.payload_len() as i32,
-                                payload: result,
-                            },
-                        )),
-                        Err(_) => tokio::spawn(
-                            self.rethink.clone().write(rethink::InMessage {
-                                topic: m.topic().to_string(),
-                                headers: headers_map,
-                                offset: m.offset(),
-                                partition: m.partition(),
-                                timestamp: m.timestamp().to_millis().unwrap(),
-                                at: reql_types::DateTime(Utc.timestamp_millis(m.timestamp().to_millis().unwrap())),
-                                payload_size: m.payload_len() as i32,
-                                payload: payload_str.to_string(),
-                            }),
-                        ),
-                    };
+                    if json_parse_result.is_err() {
+                        warn!("could not deal with non-json payload");
+                        return future::ready(())
+                    }
+
+                    tokio::spawn(self.rethink.clone().write(
+                        rethink::InMessageRaw {
+                            topic: m.topic().to_string(),
+                            headers: headers_map,
+                            offset: m.offset(),
+                            partition: m.partition(),
+                            timestamp: m.timestamp().to_millis().unwrap(),
+                            at: reql_types::DateTime(Utc.timestamp_millis(m.timestamp().to_millis().unwrap())),
+                            payload_size: m.payload_len() as i32,
+                            payload: json_parse_result.unwrap(),
+                        },
+                    ));
 
                     consumer.commit_message(&m, CommitMode::Async).unwrap();
                 }

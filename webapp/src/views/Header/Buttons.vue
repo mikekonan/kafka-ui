@@ -23,6 +23,8 @@
         type="primary"
         shape="circle"
         icon="ios-search"
+        :disabled="$store.getters.TOPIC == '' || $store.getters.IS_REQUESTING"
+        @click="request"
         >Search</Button
       >
     </div>
@@ -30,7 +32,13 @@
 </template>
 
 <script>
-export default {};
+export default {
+  methods: {
+    request: function () {
+      this.$store.dispatch("request");
+    }
+  }
+};
 </script>
 
 <style scoped>

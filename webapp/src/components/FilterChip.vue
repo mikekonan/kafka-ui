@@ -1,18 +1,22 @@
 <template>
   <a>
-    <Dropdown style="padding-top: 5px" trigger="contextMenu">
+    <Dropdown
+      @on-click="onItemSelected"
+      style="padding-top: 5px"
+      trigger="contextMenu"
+    >
       <div class="filter-chip">
-        <div class="filter-chip-key">{{ filterKey }}</div>
+        <div class="filter-chip-key">{{ filter.parameter }}</div>
 
-        <div class="filter-chip-operand">>{{ operand }}</div>
+        <div class="filter-chip-operator">{{ filter.operator }}</div>
 
         <span class="filter-chip-value">
-          {{ value }}
+          {{ filter.value }}
         </span>
       </div>
 
       <DropdownMenu slot="list">
-        <DropdownItem>Delete</DropdownItem>
+        <DropdownItem name="delete">Delete</DropdownItem>
       </DropdownMenu>
     </Dropdown>
   </a>
@@ -21,12 +25,15 @@
 <script>
 export default {
   props: {
-    onTrash: Function,
-    filterKey: String,
-    operand: String,
-    value: String
+    filter: Object
   },
-  methods: {}
+  methods: {
+    onItemSelected(name) {
+      if (name === "delete") {
+        this.$store.commit("REMOVE_FILTER", this.filter);
+      }
+    }
+  }
 };
 </script>
 
@@ -43,7 +50,7 @@ export default {
   background-color: rgb(70, 70, 70);
 }
 
-.filter-chip-operand {
+.filter-chip-operator {
   display: inline-block;
   padding: 0 5px;
   height: 24px;
@@ -66,12 +73,5 @@ export default {
   font-size: 12px;
   line-height: 24px;
   border-radius: 8px;
-}
-
-.filter-chip:hover {
-  -webkit-transform: scale(1.01);
-  -ms-transform: scale(1.01);
-  transform: scale(1.01);
-  /* background-color: rgb(200, 200, 200); */
 }
 </style>

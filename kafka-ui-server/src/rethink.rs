@@ -17,6 +17,7 @@ use crate::ws;
 use crate::ws::{Operator, Filter};
 use ql2::proto::{Term, Datum, Datum_DatumType};
 use tokio::sync::mpsc::{Sender};
+use stream_cancel::Valved;
 
 #[derive(Serialize, Deserialize, Debug, Eq, Hash)]
 pub struct Topic {
@@ -39,18 +40,6 @@ pub struct InMessageRaw {
     pub at: reql_types::DateTime,
     pub payload_size: i32,
     pub payload: Box<RawValue>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct InMessage {
-    pub topic: String,
-    pub headers: HashMap<String, String>,
-    pub offset: i64,
-    pub partition: i32,
-    pub timestamp: i64,
-    pub at: reql_types::DateTime,
-    pub payload_size: i32,
-    pub payload: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -92,7 +81,7 @@ impl Rethink {
     }
 
     pub fn routine(self: Arc<Self>) {
-        tokio::task::spawn(self.fill_available_topics_routine());
+        // tokio::task::spawn(self.fill_available_topics_routine());
     }
 
     async fn fill_available_topics_routine(self: Arc<Self>) {
@@ -220,22 +209,26 @@ impl Rethink {
 
         loop {
             tokio::select! {
-                _ = &mut cancel_rx => break,
+                _ = &mut cancel_rx => {
+                  info!("closing data_stream...");
+                  break
+                },
                 Some(doc) = data_stream.next() => {
                       match doc {
                         Ok(doc) => {
                             match doc {
                                 Some(reql::Document::Expected(change)) => {
                                     let message = change.new_val.unwrap();
-                                    info!("processing message for topic - '{}' with offset '{}'", message.topic, message.offset);
+                                    debug!("processing message for topic - '{}' with offset '{}'", message.topic, message.offset);
                                     in_tx.send(message).await;
                                 }
-                                Some(reql::Document::Unexpected(_)) => {} //handle err
-                                None => {}                                  //handle err
+                                Some(reql::Document::Unexpected(_)) => break,
+                                None => break
                             }
                         }
                         Err(doc) => {
                             error!("{:?}", doc);
+                            break
                         }
                     }
                 }

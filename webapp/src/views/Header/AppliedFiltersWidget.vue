@@ -1,10 +1,8 @@
 <template>
   <div class="applied-filters-container">
-    <FilterChip
-      :operand="this.operand"
-      filterKey="id"
-      value="18e118fe-002b-4e1f-b061-56258cd937b0"
-    ></FilterChip>
+    <div v-for="(filter, index) in this.$store.getters.FILTERS" :key="index">
+      <FilterChip :key="index" :filter="filter" />
+    </div>
   </div>
 </template>
 
@@ -12,6 +10,8 @@
 import FilterChip from "@/components/FilterChip.vue";
 
 export default {
+  methods: {},
+  watch: {},
   components: { FilterChip }
 };
 </script>

@@ -349,6 +349,18 @@
   &:active {
     color: @highlight-color;
   }
+
+  &[disabled] {
+    border-color: transparent;
+    background-color: transparent;
+    color: rgb(139, 139, 139);
+
+    &:hover {
+      border-color: transparent;
+      background-color: transparent;
+      color: rgb(139, 139, 139);
+    }
+  }
 }
 
 //input
@@ -421,4 +433,8 @@
 
 .ivu-dropdown-menu {
   min-width: 50px;
+}
+
+.prism-editor__textarea:focus {
+  outline: none;
 }

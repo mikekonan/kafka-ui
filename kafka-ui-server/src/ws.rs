@@ -21,6 +21,8 @@ use crate::rethink::Rethink;
 use tokio::sync::Mutex;
 use std::convert::TryInto;
 use std::process::Output;
+use tungstenite::protocol::frame::coding::Control::Close;
+use serde_json::value::RawValue;
 
 pub struct Empty {}
 
@@ -29,13 +31,14 @@ pub enum HandlerOutput {
     #[serde(alias = "Topic", rename(serialize = "topic", deserialize = "topic"))]
     Topic(rethink::Topic),
     #[serde(alias = "Message", rename(serialize = "message", deserialize = "message"))]
-    Message(rethink::InMessageRaw),
+    Message(OutputMessage),
 }
 
 #[derive(Debug)]
 pub enum HandlerCommand {
     Topics,
     Messages(MessagesRequest),
+    Close,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -93,6 +96,18 @@ impl PartialEq for WsCommand {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct OutputMessage {
+    pub topic: String,
+    pub headers: HashMap<String, String>,
+    pub offset: i64,
+    pub partition: i32,
+    pub timestamp: i64,
+    pub at: String,
+    pub payload_size: i32,
+    pub payload: Box<RawValue>,
+}
+
 async fn accept_connection(peer: SocketAddr, stream: TcpStream, uuid: uuid::Uuid, r: Arc<rethink::Rethink>) {
     info!("accepting '{}' tcp connection for peer '{}'...", uuid, peer);
 
@@ -102,6 +117,8 @@ async fn accept_connection(peer: SocketAddr, stream: TcpStream, uuid: uuid::Uuid
             err => error!("Error processing connection: {}", err),
         }
     }
+
+    info!("finished handling '{}' tcp connection for peer '{}'...", uuid, peer);
 }
 
 async fn handle_connection(peer: SocketAddr, stream: TcpStream, uuid: uuid::Uuid, rethink: Arc<rethink::Rethink>) -> Result<()> {
@@ -113,10 +130,12 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream, uuid: uuid::Uuid
 
     info!("handing connection '{}' with path '{}' for peer '{}'...", uuid, path, peer);
 
-    let handler = Handler::new(rethink.clone(), uuid.clone());
+    let (close_tx, mut close_rx) = tokio::sync::oneshot::channel::<Empty>();
+    let handler = Handler::new(rethink.clone(), uuid.clone(), close_rx);
     let handler_commands_unlocked = handler.commands_tx.lock().await;
     let mut handler_output_unlocked = handler.output_rx.lock().await;
     handler.clone().start();
+    close_tx.send(Empty {});
 
     loop {
         tokio::select! {
@@ -125,12 +144,22 @@ async fn handle_connection(peer: SocketAddr, stream: TcpStream, uuid: uuid::Uuid
                 },
                 Some(msg) = ws_stream.next() => {
                     if msg.is_err() {
+                        handler_commands_unlocked.send(HandlerCommand::Close).await;
+                        info!("connection '{}': ws connection closed", uuid);
+                        break
+                    }
+
+                    let msg = msg.unwrap();
+                    if msg.is_close() {
+                        handler_commands_unlocked.send(HandlerCommand::Close).await;
                         info!("connection '{}': ws connection closed", uuid);
                         break
                     }
 
                     info!("connection '{}': message received - {:?}", uuid, msg);
-                    let data = &*msg?.into_data();
+                    let data = &*msg.into_data();
+
+                    info!("{:?}", data);
                     let request = serde_json::from_slice::<WsRequest>(data).unwrap();
 
                     match request.request {
@@ -174,18 +203,18 @@ struct Handler {
     messages_bus_tx: Mutex<Sender<rethink::InMessageRaw>>,
     messages_bus_rx: Mutex<Receiver<rethink::InMessageRaw>>,
 
-    messages_commands_tx: Mutex<Sender<MessagesRequest>>,
-    messages_commands_rx: Mutex<Receiver<MessagesRequest>>,
+    messages_commands_tx: Mutex<Sender<Option<MessagesRequest>>>,
+    messages_commands_rx: Mutex<Receiver<Option<MessagesRequest>>>,
 
     topics_bus_tx: Mutex<Sender<rethink::Topic>>,
     topics_bus_rx: Mutex<Receiver<rethink::Topic>>,
 
-    topics_commands_tx: Mutex<Sender<Empty>>,
-    topics_commands_rx: Mutex<Receiver<Empty>>,
+    topics_commands_tx: Mutex<Sender<Option<Empty>>>,
+    topics_commands_rx: Mutex<Receiver<Option<Empty>>>,
 }
 
 impl Handler {
-    pub fn new(rethink: Arc<Rethink>, client_uuid: Uuid) -> Arc<Self> {
+    pub fn new(rethink: Arc<Rethink>, client_uuid: Uuid, mut cancel_rx: tokio::sync::oneshot::Receiver<Empty>) -> Arc<Self> {
         let (commands_tx, commands_rx) = channel(1);
         let (output_tx, output_rx) = channel(100);
         let (messages_tx, messages_rx) = channel(1000);
@@ -193,7 +222,6 @@ impl Handler {
 
         let (messages_commands_tx, messages_commands_rx) = channel(1);
         let (topics_commands_tx, topics_commands_rx) = channel(1);
-
 
         Arc::from(Handler {
             client_uuid,
@@ -216,6 +244,7 @@ impl Handler {
 
             topics_commands_rx: Mutex::new(topics_commands_rx),
             topics_commands_tx: Mutex::new(topics_commands_tx),
+
         })
     }
 
@@ -227,17 +256,22 @@ impl Handler {
 
     async fn fw_topics(self: Arc<Self>) {
         let client_uuid = self.client_uuid.clone();
-        info!("connection '{}' fw_topics - starting...", client_uuid);
+        info!("connection '{}' fw_topics - start listening for requests...", client_uuid);
 
         let mut commands_rx_unlocked = self.topics_commands_rx.lock().await;
         let mut canceller: RefCell<Option<Trigger>> = RefCell::from(None);
 
         loop {
-            commands_rx_unlocked.recv().await;
+            let command = commands_rx_unlocked.recv().await.unwrap();
 
             if let (Some(c)) = canceller.take() {
                 info!("connection '{}' fw_topics - cancelling...", client_uuid);
                 c.cancel();
+            }
+
+            if command.is_none() {
+                info!("connection '{}' fw_topics - stopping...", client_uuid);
+                break;
             }
 
             info!("connection '{}' fw_topics - starting pipe...", client_uuid);
@@ -261,7 +295,7 @@ impl Handler {
 
     async fn fw_messages(self: Arc<Self>) {
         let client_uuid = self.client_uuid.clone();
-        info!("connection '{}' fw_topics - starting...", client_uuid);
+        info!("connection '{}' fw_messages - start listening for requests...", client_uuid);
         let mut commands_rx_unlocked = self.messages_commands_rx.lock().await;
         let mut subscribe_canceller: RefCell<Option<tokio::sync::oneshot::Sender<Empty>>> = RefCell::from(None);
         let mut pipe_canceller: RefCell<Option<tokio::sync::oneshot::Sender<Empty>>> = RefCell::from(None);
@@ -278,6 +312,13 @@ impl Handler {
                 info!("connection '{}' fw_messages - cancelling piper...", client_uuid);
                 c.send(Empty {});
             }
+
+            if command.is_none() {
+                info!("connection '{}' fw_messages - stopping...", client_uuid);
+                break;
+            }
+
+            let command = command.unwrap();
 
             info!("connection '{}' fw_messages - starting pipe...", client_uuid);
 
@@ -296,7 +337,7 @@ impl Handler {
                 loop {
                     tokio::select! {
                         Some(message) = rethink_msg_rx.recv() => {bus.send(message).await;},
-                        _ = &mut pipe_cancel_rx => break,
+                        _ = &mut pipe_cancel_rx => {break},
                     }
                 }
             });
@@ -317,16 +358,32 @@ impl Handler {
                     output_tx_unlocked.send(HandlerOutput::Topic(topic)).await;
                 },
                 Some(message) = messages_bus_rx_unlocked.recv() => {
-                    output_tx_unlocked.send(HandlerOutput::Message(message)).await;
+                    let output_message = OutputMessage {
+                        topic: message.topic,
+                        headers: message.headers,
+                        offset: message.offset,
+                        partition: message.partition,
+                        timestamp: message.timestamp,
+                        at: message.at.to_string(),
+                        payload_size: message.payload_size,
+                        payload: message.payload,
+                    };
+
+                    output_tx_unlocked.send(HandlerOutput::Message(output_message)).await;
                 },
                 Some(command_request) = commands_rx_unlocked.recv() => {
                     info!("connection '{}' command interpreter: received command - {:?}", self.client_uuid, command_request);
                     match command_request {
                          HandlerCommand::Topics => {
-                            topics_commands_tx_unlocked.send(Empty{}).await;
+                            topics_commands_tx_unlocked.send(Some(Empty{})).await;
                          }
                          HandlerCommand::Messages(message_request) => {
-                            messages_commands_tx_unlocked.send(message_request).await;
+                            messages_commands_tx_unlocked.send(Some(message_request)).await;
+                         }
+                         HandlerCommand::Close => {
+                           messages_commands_tx_unlocked.send(None).await;
+                           topics_commands_tx_unlocked.send(None).await;
+                           break
                          }
                     }
                 },

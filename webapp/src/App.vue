@@ -4,6 +4,18 @@
   </div>
 </template>
 
+<script>
+export default {
+  watch: {
+    "$store.getters.IS_CONNECTED": function (isConnected) {
+      if (isConnected) {
+        this.$socket.sendObj({ request: "topics" });
+      }
+    }
+  }
+};
+</script>
+
 <style lang="less">
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
