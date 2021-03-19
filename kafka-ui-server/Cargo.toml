@@ -1,0 +1,36 @@
+[package]
+name = "kafka-ui-server"
+version = "0.1.0"
+authors = ["Mikalai Konan <mikalai.konan@icloud.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures = { package = "futures", version = "0.3.8", features = ["compat"] }
+futures-util = { version = "0.3.8", default-features = false, features = ["async-await", "sink", "std"] }
+reql = "0.0.27"
+reql-types = "0.0.4"
+reql-macros = "0.0.19"
+tokio = { version = "0.3.6", features = ["full"] }
+tokio-timer = "0.2.13"
+tokio-tungstenite = "0.12.0"
+tungstenite = "0.11.1"
+serde = { version = "1.0.118", features = ["derive"] }
+serde_json = { version = "1.0.59", features = ["raw_value"] }
+bus_queue = "0.5.3"
+bus = "2.2.3"
+lazy_static = "1.4.0"
+log = "0.4"
+pretty_env_logger = "0.4"
+uuid = { version = "0.8", features = ["serde", "v4"] }
+rdkafka = { version = "0.24", features = ["cmake-build"] }
+tokio-compat-02 = "0.1.2"
+clap = "2.33.3"
+chrono = { version = "0.4", features = ["serde"] }
+stream-cancel = "0.7.0"
+path-tree = "0.1.12"
+strum = "0.20"
+strum_macros = "0.20"
+async-stream = "0.3.0"
+ql2 = "1.1.2"
