@@ -5,3 +5,5 @@
 */.nuxt
 data
 .idea
+**/.DS_Store
+**/*_enum.go
