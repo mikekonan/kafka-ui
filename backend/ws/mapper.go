@@ -1,7 +1,7 @@
 package ws
 
 import (
-	"backend_new/store"
+	"backend/store"
 	"encoding/json"
 	"strconv"
 	"strings"

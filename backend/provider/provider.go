@@ -1,8 +1,8 @@
 package provider
 
 import (
-	"backend_new/config"
-	"backend_new/store"
+	"backend/config"
+	"backend/store"
 	"strings"
 
 	log "github.com/sirupsen/logrus"

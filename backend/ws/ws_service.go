@@ -1,8 +1,8 @@
 package ws
 
 import (
-	"backend_new/config"
-	"backend_new/store"
+	"backend/config"
+	"backend/store"
 	"context"
 	"encoding/json"
 	"net"

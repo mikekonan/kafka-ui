@@ -1,7 +1,7 @@
 package store
 
 import (
-	"backend_new/config"
+	"backend/config"
 	"context"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"

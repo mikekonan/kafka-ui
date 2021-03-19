@@ -1,11 +1,11 @@
 package main
 
 import (
-	"backend_new/application"
-	"backend_new/config"
-	"backend_new/provider"
-	"backend_new/store"
-	"backend_new/ws"
+	"backend/application"
+	"backend/config"
+	"backend/provider"
+	"backend/store"
+	"backend/ws"
 	"context"
 	"github.com/goioc/di"
 	log "github.com/sirupsen/logrus"
