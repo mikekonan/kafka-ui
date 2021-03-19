@@ -100,7 +100,7 @@ export default new Vuex.Store({
         filters: filters,
       });
 
-      setTimeout(() => ctx.commit("SWITCH_IS_REQUESTING"), 3000);
+      setTimeout(() => ctx.commit("SWITCH_IS_REQUESTING"), 2000);
     },
   },
   modules: {},
