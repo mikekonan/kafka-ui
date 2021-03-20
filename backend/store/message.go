@@ -3,12 +3,13 @@ package store
 import (
 	"bytes"
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
 const messageFilterFields = "topic;offset;partition;timestamp;at;size;"

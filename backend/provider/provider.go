@@ -1,9 +1,10 @@
 package provider
 
 import (
+	"strings"
+
 	"backend/config"
 	"backend/store"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"

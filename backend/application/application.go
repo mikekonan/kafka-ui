@@ -2,11 +2,12 @@ package application
 
 import (
 	"context"
-	"github.com/goioc/di"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/goioc/di"
+	log "github.com/sirupsen/logrus"
 )
 
 type Service interface {

@@ -1,38 +1,38 @@
 package main
 
 import (
+	"context"
+	"os"
+	"reflect"
+
 	"backend/application"
 	"backend/config"
 	"backend/provider"
 	"backend/store"
 	"backend/ws"
-	"context"
+
 	"github.com/goioc/di"
 	log "github.com/sirupsen/logrus"
-	"os"
-	"reflect"
 )
 
 func main() {
-	var err error
-	logInit()
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.TraceLevel)
 
 	app := initContainers()
 
-	if err = app.Run(); err != nil {
+	if err := app.Run(); err != nil {
 		log.Error(err.Error())
 		os.Exit(1)
 	}
+
 	os.Exit(0)
 }
 
 func initContainers() *application.Application {
-	var (
-		ctx    context.Context
-		cancel context.CancelFunc
-	)
+	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), store.NewTopicChan, make(chan string)))
 
-	ctx, cancel = context.WithCancel(context.WithValue(context.Background(), store.NewTopicChan, make(chan string)))
 	_, _ = di.RegisterBeanInstance("appContext", ctx)
 	_, _ = di.RegisterBeanInstance("appConfig", new(config.Config).Defaults())
 	_, _ = di.RegisterBean("appConfigure", reflect.TypeOf((*config.Configure)(nil)))
@@ -46,10 +46,4 @@ func initContainers() *application.Application {
 	}
 
 	return application.New(cancel, "storeService", "providerService", "wsService")
-}
-
-func logInit() {
-	log.SetFormatter(&log.JSONFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.TraceLevel)
 }

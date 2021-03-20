@@ -1,11 +1,12 @@
 package ws
 
 import (
-	"backend/store"
 	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
+
+	"backend/store"
 )
 
 var messageFilterFields = map[CastType]string{

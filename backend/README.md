@@ -1,6 +1,7 @@
 # GO Backend for kafka-ui
 
 ## WebSocket
+
 1. Create a socket (ws://localhost:9002/) \
    1.1 Read messages:
    ```json

@@ -1,12 +1,13 @@
 package ws
 
 import (
-	"backend/config"
-	"backend/store"
 	"context"
 	"encoding/json"
 	"net"
 	"net/http"
+
+	"backend/config"
+	"backend/store"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"

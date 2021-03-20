@@ -1,12 +1,14 @@
 package store
 
 import (
-	"backend/config"
 	"context"
+	"strings"
+
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	rethink "gopkg.in/rethinkdb/rethinkdb-go.v6"
-	"strings"
+
+	"backend/config"
 )
 
 const (

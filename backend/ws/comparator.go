@@ -1,9 +1,10 @@
 package ws
 
 import (
-	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Comparator interface {
