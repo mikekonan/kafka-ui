@@ -3,36 +3,38 @@ package config
 import (
 	"context"
 	"fmt"
+	"github.com/heetch/confita/backend/env"
 
 	"github.com/heetch/confita"
-	"github.com/heetch/confita/backend/env"
 	"github.com/heetch/confita/backend/flags"
 	log "github.com/sirupsen/logrus"
 )
 
 type Config struct {
-	kafkaHost    string `config:"kafka-host" envconfig:"kafka-host"`
-	kafkaPort    string `config:"kafka-port" envconfig:"kafka-port"`
-	KafkaGroup   string `config:"kafka-group-id" envconfig:"kafka-group-id"`
-	databaseHost string `config:"db-host" envconfig:"db-port"`
-	databasePort string `config:"db-port" envconfig:"db-port"`
+	WebSocketPort string `config:"ws-port"`
+	KafkaHost     string `config:"kafka-host"`
+	KafkaPort     string `config:"kafka-port"`
+	KafkaGroup    string `config:"kafka-group-id"`
+	DatabaseHost  string `config:"db-host"`
+	DatabasePort  string `config:"db-port"`
 }
 
 func (config *Config) Defaults() *Config {
-	config.kafkaHost = "127.0.0.1"
-	config.kafkaPort = "9092"
+	config.WebSocketPort = "9002"
+	config.KafkaHost = "127.0.0.1"
+	config.KafkaPort = "9092"
 	config.KafkaGroup = "kafka-ui-messages-fetch"
-	config.databaseHost = "127.0.0.1"
-	config.databasePort = "28015"
+	config.DatabaseHost = "127.0.0.1"
+	config.DatabasePort = "28015"
 	return config
 }
 
 func (config *Config) KafkaBrokers() string {
-	return fmt.Sprintf("%s:%s", config.kafkaHost, config.kafkaPort)
+	return fmt.Sprintf("%s:%s", config.KafkaHost, config.KafkaPort)
 }
 
 func (config *Config) DatabaseServer() string {
-	return fmt.Sprintf("%s:%s", config.databaseHost, config.databasePort)
+	return fmt.Sprintf("%s:%s", config.DatabaseHost, config.DatabasePort)
 }
 
 type Configure struct {
@@ -52,8 +54,8 @@ func (configure *Configure) ServeWriteChannel() chan interface{} {
 func (configure *Configure) LoadConfig() (cfg *Configure, err error) {
 	configure.serveMessageChan = make(chan interface{})
 
-	if err = confita.NewLoader(flags.NewBackend(), env.NewBackend()).Load(context.Background(), configure.Config); err != nil {
-		log.Warn("Error load config")
+	if err = confita.NewLoader(env.NewBackend(), flags.NewBackend()).Load(context.Background(), configure.Config); err != nil {
+		log.Warnf("Error load config: %s", err.Error())
 		return configure, err
 	}
 

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
@@ -42,7 +43,7 @@ func (rethinkService *RethinkService) Topics(socketContext context.Context, star
 	go func() {
 		defer close(msgChan)
 
-		id := rethinkService.connect(true)
+		id, _ := rethinkService.connect(true)
 		defer rethinkService.close(id)
 
 		termTopics := rethink.Table(tableName).Distinct(rethink.DistinctOpts{
@@ -88,7 +89,7 @@ func (rethinkService *RethinkService) Messages(socketContext context.Context, fi
 		)
 		defer close(msgChan)
 
-		id := rethinkService.connect(true)
+		id, _ := rethinkService.connect(true)
 		defer rethinkService.close(id)
 
 		rethinkService.listenChanges(socketContext, id, changesChan)
@@ -154,12 +155,25 @@ func (rethinkService *RethinkService) listenChanges(socketContext context.Contex
 }
 
 func (rethinkService *RethinkService) Serve() {
-	if err := rethinkService.InitializeContext(); err != nil {
+	var (
+		err        error
+		retryCount = 10
+	)
+	for retryCount > 0 {
+		if err = rethinkService.InitializeContext(); err != nil {
+			retryCount--
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
+	}
+
+	if retryCount == 0 && err != nil {
 		log.Fatalf("Db error: %s", err.Error())
 	}
 
 	go func() {
-		id := rethinkService.connect(true)
+		id, _ := rethinkService.connect(true)
 		defer rethinkService.close(id)
 
 		// init start topics
@@ -200,12 +214,18 @@ func (rethinkService *RethinkService) Stop() {
 }
 
 func (rethinkService *RethinkService) InitializeContext() error {
-	var err error
+	var (
+		err error
+		id  uuid.UUID
+	)
 	// Create DB
 	rethinkService.connectionPool = make(map[uuid.UUID]*rethink.Session)
 	rethinkService.newTopicChan = make(chan string)
 
-	id := rethinkService.connect(false)
+	if id, err = rethinkService.connect(false); err != nil {
+		return err
+	}
+
 	if err = rethinkService.executeCreateIfAbsent(rethink.DBList().Contains(dbName), rethink.DBCreate(dbName), id); err != nil {
 		return err
 	}
@@ -213,7 +233,10 @@ func (rethinkService *RethinkService) InitializeContext() error {
 	rethinkService.close(id)
 
 	// Create Table And Index
-	id = rethinkService.connect(true)
+	if id, err = rethinkService.connect(true); err != nil {
+		return err
+	}
+
 	if err = rethinkService.executeCreateIfAbsent(rethink.TableList().Contains(tableName), rethink.TableCreate(tableName), id); err != nil {
 		return err
 	}
@@ -228,7 +251,7 @@ func (rethinkService *RethinkService) InitializeContext() error {
 	return nil
 }
 
-func (rethinkService *RethinkService) connect(isDbCreated bool) uuid.UUID {
+func (rethinkService *RethinkService) connect(isDbCreated bool) (uuid.UUID, error) {
 	var (
 		session *rethink.Session
 		err     error
@@ -243,13 +266,13 @@ func (rethinkService *RethinkService) connect(isDbCreated bool) uuid.UUID {
 	}
 
 	if session, err = rethink.Connect(connectOpts); err != nil {
-		log.Fatalf("Open rethinkDb connection error: %s", err.Error())
+		return [16]byte{}, err
 	}
 
 	id := uuid.New()
 	rethinkService.connectionPool[id] = session
 
-	return id
+	return id, nil
 }
 
 func (rethinkService *RethinkService) close(id uuid.UUID) {

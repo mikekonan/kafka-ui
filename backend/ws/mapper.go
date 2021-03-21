@@ -10,14 +10,8 @@ import (
 )
 
 var messageFilterFields = map[CastType]string{
-	CastTypeInt: "topic;at",
-	CastTypeStr: "offset;partition;timestamp;size",
-	//"topic":     CastTypeStr,
-	//"offset":    CastTypeInt,
-	//"partition": CastTypeInt,
-	//"timestamp": CastTypeInt,
-	//"at":        CastTypeStr,
-	//"size":      CastTypeInt,
+	CastTypeStr: "topic;at",
+	CastTypeInt: "offset;partition;timestamp;size",
 }
 
 func ConvertToWsMessage(message store.Message) Messages {
