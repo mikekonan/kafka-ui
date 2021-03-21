@@ -22,5 +22,7 @@ RUN cd /tmp \
     && apk add libprotobuf-3.11.2-r1.apk rethinkdb-2.3.6-r15.apk \
     && rm /tmp/*
 
-EXPOSE 80
-CMD ["nginx"]
+COPY entrypoint.sh /app/entrypoint.sh
+
+EXPOSE 80 9002
+CMD ["/bin/sh", "/app/entrypoint.sh"]

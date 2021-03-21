@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 
@@ -30,7 +31,7 @@ func (wsService *WsService) Serve() {
 	wsService.connections = make(map[uuid.UUID]net.Conn)
 
 	http.HandleFunc("/", wsService.Socket)
-	go log.Fatal(http.ListenAndServe(":9002", nil))
+	go log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", wsService.configure.Config.WebSocketPort), nil))
 }
 
 func (wsService *WsService) Stop() {

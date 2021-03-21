@@ -31,7 +31,7 @@ func (provider *Provider) Serve() {
 		if provider.consumer, err = kafka.NewConsumer(&kafka.ConfigMap{
 			"bootstrap.servers": provider.configure.Config.KafkaBrokers(),
 			"group.id":          provider.configure.Config.KafkaGroup,
-			"auto.offset.reset": "earliest",
+			"auto.offset.reset": "latest",
 		}); err != nil {
 			log.Errorf("Failed connection to kafka: %s", err.Error())
 			return
