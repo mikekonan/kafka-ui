@@ -29,10 +29,6 @@ func (config *Config) Defaults() *Config {
 	return config
 }
 
-func (config *Config) KafkaBrokers() string {
-	return fmt.Sprintf("%s:%s", config.KafkaHost, config.KafkaPort)
-}
-
 func (config *Config) DatabaseServer() string {
 	return fmt.Sprintf("%s:%s", config.DatabaseHost, config.DatabasePort)
 }

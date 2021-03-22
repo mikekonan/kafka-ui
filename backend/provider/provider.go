@@ -1,17 +1,18 @@
 package provider
 
 import (
-	"strings"
-
 	"backend/config"
 	"backend/store"
+	"fmt"
+	"net"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
 type Service interface {
-	Serve()
+	Serve() error
 	Stop()
 }
 
@@ -22,30 +23,41 @@ type Provider struct {
 
 func (provider *Provider) Serve() {
 	var (
-		err     error
 		topics  []string
 		message *kafka.Message
+		ipStr   = ""
 	)
 
 	go func() {
+		ips, err := net.LookupIP(provider.configure.Config.KafkaHost)
+
+		for _, ip := range ips {
+			if ip.To4() != nil {
+				ipStr = ip.String()
+				break
+			}
+		}
+
+		if ipStr == "" {
+			log.Fatalf("Dns no resolve hosts: %s", provider.configure.Config.KafkaHost)
+		}
+
 		if provider.consumer, err = kafka.NewConsumer(&kafka.ConfigMap{
-			"bootstrap.servers": provider.configure.Config.KafkaBrokers(),
-			"group.id":          provider.configure.Config.KafkaGroup,
-			"auto.offset.reset": "latest",
+			"broker.address.family": "v4",
+			"bootstrap.servers":     fmt.Sprintf("%s:%s", ipStr, provider.configure.Config.KafkaPort),
+			"group.id":              provider.configure.Config.KafkaGroup,
+			"auto.offset.reset":     "smallest",
 		}); err != nil {
-			log.Errorf("Failed connection to kafka: %s", err.Error())
-			return
+			log.Fatalf("Kafka connection error: %s", err.Error())
 		}
 		defer provider.close()
 
 		if topics, err = provider.topics(); err != nil {
-			log.Errorf("Couldn't get topics: %s", err.Error())
-			return
+			log.Fatalf("Couldn't get topics: %s", err.Error())
 		}
 
 		if err = provider.consumer.SubscribeTopics(topics, nil); err != nil {
-			log.Errorf("Kafka: failed to subscribe on topics - '%s'. Err: %s", topics, err.Error())
-			return
+			log.Fatalf("Kafka: failed to subscribe on topics - '%s'. Err: %s", topics, err.Error())
 		}
 
 		for {

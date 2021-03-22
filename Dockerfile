@@ -19,10 +19,10 @@ COPY nginx.conf /etc/nginx/nginx.conf
 RUN cd /tmp \
     && wget http://dl-cdn.alpinelinux.org/alpine/v3.11/main/x86_64/libprotobuf-3.11.2-r1.apk \
     && wget http://dl-cdn.alpinelinux.org/alpine/v3.11/community/x86_64/rethinkdb-2.3.6-r15.apk \
-    && apk add libprotobuf-3.11.2-r1.apk rethinkdb-2.3.6-r15.apk \
+    && apk add libprotobuf-3.11.2-r1.apk rethinkdb-2.3.6-r15.apk bash \
     && rm /tmp/*
 
 COPY entrypoint.sh /app/entrypoint.sh
 
 EXPOSE 80 9002
-CMD ["/bin/sh", "/app/entrypoint.sh"]
+CMD ["/bin/bash", "/app/entrypoint.sh"]
