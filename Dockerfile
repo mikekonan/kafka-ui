@@ -1,27 +1,28 @@
-FROM node:10-stretch
-
-RUN apt-get update && apt-get install -y lsb-release apt-transport-https \
-    && echo "deb https://download.rethinkdb.com/apt `lsb_release -cs` main" | tee /etc/apt/sources.list.d/rethinkdb.list \
-    && wget -qO- https://download.rethinkdb.com/apt/pubkey.gpg | apt-key add - \
-    && apt-get update \
-    && apt-get install -y rethinkdb \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm i -g concurrently
-
-COPY backend/piper /app/piper
-COPY backend/provider /app/provider
-COPY proxy /app/proxy
+FROM node:14-alpine as web-builder
 COPY webapp /app/webapp
+RUN cd /app/webapp \
+    && npm install \
+    && npm run build
 
-ENV NUXT_HOST=127.0.0.1
-ENV NUXT_PORT=3000
+FROM golang:1.16.2-alpine3.13 as backend-builder
+COPY backend /app/backend
+RUN cd /app/backend \
+    && apk add --no-cache make gcc musl-dev librdkafka-dev \
+    && go get github.com/abice/go-enum \
+    && make build-alpine
 
-RUN \
-    cd /app/piper && npm install \
-    && cd ../provider && npm install \
-    && cd ../proxy && npm install \
-    && cd ../webapp && npm install && npm run build
+FROM nginx:1.19.8-alpine
+COPY --from=web-builder /app/webapp/dist /etc/nginx/html
+COPY --from=backend-builder /app/backend/kafka-backend /app/kafka-backend
+COPY nginx.conf /etc/nginx/nginx.conf
+
+RUN cd /tmp \
+    && wget http://dl-cdn.alpinelinux.org/alpine/v3.11/main/x86_64/libprotobuf-3.11.2-r1.apk \
+    && wget http://dl-cdn.alpinelinux.org/alpine/v3.11/community/x86_64/rethinkdb-2.3.6-r15.apk \
+    && apk add libprotobuf-3.11.2-r1.apk rethinkdb-2.3.6-r15.apk \
+    && rm /tmp/*
 
 COPY entrypoint.sh /app/entrypoint.sh
 
-CMD ["/bin/bash", "/app/entrypoint.sh"]
+EXPOSE 80 9002
+CMD ["/bin/sh", "/app/entrypoint.sh"]

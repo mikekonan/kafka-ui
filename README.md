@@ -11,7 +11,7 @@ Application to browse and visualize kafka topics and messages at realtime.
 4. Provider - simple http server that acts as a client to the database and provides streaming api for the webapp.
 
 ## Running
-`docker run --rm -p 8000:3005 -e "KAFKA_HOST=kafka" -e "KAFKA_PORT:9092" mikekonan/kafka-ui:latest`
+`docker run --rm -p 8000:80 -p 9002:9002 -e "KAFKA_HOST=kafka" -e "KAFKA_PORT:9092" mikekonan/kafka-ui:latest`
 
 or via docker-compose.yml:
 
@@ -22,15 +22,20 @@ or via docker-compose.yml:
     volumes:
       - ./kafka-ui/rethinkdb_data:/rethinkdb_data
     ports:
-      - 3005:3005
+      - 8000:80
+      - 9002:9002
     environment:
       KAFKA_HOST: "kafka"
+      WS_PORT: 9002
 ```
 
 
 ## Options:
-- Use `KAFKA_HOST` to set the kafka dns name
-- Use `KAFKA_PORT` to set the kafka port
+- Use `WS_PORT` to set the backend web socket port `(default: 9002)`
+- Use `KAFKA_HOST` to set the kafka dns name `(default: 127.0.0.1)`
+- Use `KAFKA_PORT` to set the kafka port `(default: 9092)`
+- Use `DB_HOST` to set the rethinkdb dns name `(default: 127.0.0.1)`
+- Use `DB_PORT` to set the rethinkdb port `(default: 28015)`
 
 ## Plans
 - Add filtering for message entries
