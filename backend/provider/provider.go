@@ -12,7 +12,7 @@ import (
 )
 
 type Service interface {
-	Serve() error
+	Serve()
 	Stop()
 }
 

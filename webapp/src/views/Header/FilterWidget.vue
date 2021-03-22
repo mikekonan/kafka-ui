@@ -49,7 +49,7 @@
           v-model="value"
           @click="add"
           size="small"
-          style="width: 300px; padding-left: 5px"
+          style="width: 299px; padding-left: 5px"
         />
 
         <br />
