@@ -3,8 +3,6 @@ package provider
 import (
 	"backend/config"
 	"backend/store"
-	"fmt"
-	"net"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -23,30 +21,16 @@ type Provider struct {
 
 func (provider *Provider) Serve() {
 	var (
+		err     error
 		topics  []string
 		message *kafka.Message
-		ipStr   = ""
 	)
 
 	go func() {
-		ips, err := net.LookupIP(provider.configure.Config.KafkaHost)
-
-		for _, ip := range ips {
-			if ip.To4() != nil {
-				ipStr = ip.String()
-				break
-			}
-		}
-
-		if ipStr == "" {
-			log.Fatalf("Dns no resolve hosts: %s", provider.configure.Config.KafkaHost)
-		}
-
 		if provider.consumer, err = kafka.NewConsumer(&kafka.ConfigMap{
-			"broker.address.family": "v4",
-			"bootstrap.servers":     fmt.Sprintf("%s:%s", ipStr, provider.configure.Config.KafkaPort),
-			"group.id":              provider.configure.Config.KafkaGroup,
-			"auto.offset.reset":     "smallest",
+			"bootstrap.servers": provider.configure.Config.KafkaHost,
+			"group.id":          provider.configure.Config.KafkaGroup,
+			"auto.offset.reset": "smallest",
 		}); err != nil {
 			log.Fatalf("Kafka connection error: %s", err.Error())
 		}
