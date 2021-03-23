@@ -63,6 +63,9 @@ export default new Vuex.Store({
 
       state.messages.unshift(message);
     },
+    CLEAR_MESSAGES: (state) => {
+      state.messages = [];
+    },
     ADD_FILTER: (state, filter) => {
       state.filters.push(filter);
     },
@@ -94,6 +97,7 @@ export default new Vuex.Store({
       });
 
       ctx.commit("SWITCH_IS_REQUESTING");
+      ctx.commit("CLEAR_MESSAGES");
 
       Vue.prototype.$socket.sendObj({
         request: "messages",

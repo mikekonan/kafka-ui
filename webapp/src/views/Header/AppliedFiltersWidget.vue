@@ -1,6 +1,10 @@
 <template>
   <div class="applied-filters-container">
-    <div v-for="(filter, index) in this.$store.getters.FILTERS" :key="index">
+    <div
+      style="display: inline-block"
+      v-for="(filter, index) in this.$store.getters.FILTERS"
+      :key="index"
+    >
       <FilterChip :key="index" :filter="filter" />
     </div>
   </div>
