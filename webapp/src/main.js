@@ -9,7 +9,7 @@ import router from "./router";
 import store from "./store";
 
 import VueNativeSock from "vue-native-websocket";
-Vue.use(VueNativeSock, `ws://${window.location.hostname}:9002`, {
+Vue.use(VueNativeSock, `ws://${window.location.hostname}/ws`, {
   store: store,
   format: "json",
 });
