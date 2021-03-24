@@ -23,10 +23,9 @@
         type="primary"
         shape="circle"
         icon="ios-search"
-        :disabled="$store.getters.TOPIC == '' || $store.getters.IS_REQUESTING"
+        :disabled="$store.getters.IS_REQUESTING"
         @click="request"
-        >Search</Button
-      >
+        >Search</Button>
     </div>
   </div>
 </template>
