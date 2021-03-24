@@ -4,6 +4,7 @@ import (
 	"backend/config"
 	"backend/store"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
@@ -21,9 +22,10 @@ type Provider struct {
 
 func (provider *Provider) Serve() {
 	var (
-		err     error
-		topics  []string
-		message *kafka.Message
+		err        error
+		topics     []string
+		message    *kafka.Message
+		topicsChan = make(chan []string)
 	)
 
 	go func() {
@@ -36,9 +38,8 @@ func (provider *Provider) Serve() {
 		}
 		defer provider.close()
 
-		if topics, err = provider.topics(); err != nil {
-			log.Fatalf("Couldn't get topics: %s", err.Error())
-		}
+		provider.listenNewTopics(topicsChan)
+		topics = <-topicsChan
 
 		if err = provider.consumer.SubscribeTopics(topics, nil); err != nil {
 			log.Fatalf("Kafka: failed to subscribe on topics - '%s'. Err: %s", topics, err.Error())
@@ -49,6 +50,12 @@ func (provider *Provider) Serve() {
 			select {
 			case <-provider.configure.GlobalContext.Done():
 				return
+
+			case topics = <-topicsChan:
+				_ = provider.consumer.Unsubscribe()
+				if err = provider.consumer.SubscribeTopics(topics, nil); err != nil {
+					log.Fatalf("Kafka: failed to subscribe on topics - '%s'. Err: %s", topics, err.Error())
+				}
 
 			default:
 				if message, err = provider.consumer.ReadMessage(-1); err != nil {
@@ -75,17 +82,31 @@ func (provider *Provider) close() {
 	}
 }
 
-func (provider *Provider) topics() (topics []string, err error) {
-	meta, err := provider.consumer.GetMetadata(nil, true, 3000)
-	if err != nil {
-		return
-	}
+func (provider *Provider) listenNewTopics(topicChan chan []string) {
+	var topics []string
+	go func() {
+		timer := time.NewTimer(2 * time.Second)
 
-	for _, v := range meta.Topics {
-		if strings.Contains(v.Topic, store.SkipTopics) {
-			continue
+		for {
+			select {
+			case <-timer.C:
+				meta, err := provider.consumer.GetMetadata(nil, true, 3000)
+				if err != nil {
+					return
+				}
+
+				for _, v := range meta.Topics {
+					if strings.Contains(v.Topic, store.SkipTopics) {
+						continue
+					}
+					topics = append(topics, v.Topic)
+				}
+
+				if len(topics) == 0 {
+					topics = append(topics, "*")
+				}
+				topicChan <- topics
+			}
 		}
-		topics = append(topics, v.Topic)
-	}
-	return
+	}()
 }

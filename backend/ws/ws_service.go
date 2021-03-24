@@ -91,7 +91,7 @@ func (wsService *WsService) handleInput(id uuid.UUID, socketCancel context.Cance
 				log.Tracef("Get msg from client '%s': %s", id, string(msg))
 
 				if opCode == ws.OpClose || opCode == ws.OpContinuation {
-					log.Tracef("Get closed command for connection '%s'", id)
+					log.Infof("Get closed command for connection '%s'", id)
 					socketCancel()
 					return
 				}
