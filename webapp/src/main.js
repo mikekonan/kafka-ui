@@ -10,7 +10,7 @@ import store from "./store";
 
 import VueNativeSock from "vue-native-websocket";
 
-Vue.use(VueNativeSock, `${window.location.protocol == "https:" ? "wss": "ws"}://${window.location.hostname}/ws`, {
+Vue.use(VueNativeSock, `${window.location.protocol === "https:" ? "wss": "ws"}://${window.location.hostname}/ws`, {
   store: store,
   format: "json",
 });
