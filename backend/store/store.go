@@ -97,21 +97,17 @@ func (rethinkService *RethinkService) Messages(socketContext context.Context, fi
 		for {
 			select {
 			case <-socketContext.Done():
-				log.Info("Close rethinkDb connection for read messages. Socket context close")
+				log.Info("Close rethinkDb connection to push messages. Socket context close")
 				return
 
 			case <-rethinkService.configure.GlobalContext.Done():
-				log.Info("Close rethinkDb connection for read messages. Application context close")
+				log.Info("Close rethinkDb connection to read messages. Application context close")
 				return
 
 			case filter = <-filterChan:
-				rethinkService.getLastMessages(id, msgChan, filter)
+				rethinkService.getLastMessages(id, msgChan, filter, 20)
 
 			case msg := <-changesChan:
-				if len(filter.Filters) == 0 {
-					continue
-				}
-
 				if msg.Filter(filter) {
 					msgChan <- msg
 				}
@@ -133,11 +129,11 @@ func (rethinkService *RethinkService) listenChanges(socketContext context.Contex
 		for {
 			select {
 			case <-socketContext.Done():
-				log.Info("Close rethinkDb connection for read messages. Socket context close")
+				log.Info("Close rethinkDb connection to listen changes. Socket context close")
 				return
 
 			case <-rethinkService.configure.GlobalContext.Done():
-				log.Info("Close rethinkDb connection for read messages. Application context close")
+				log.Info("Close rethinkDb connection to listen changes. Application context close")
 				return
 
 			default:
@@ -301,14 +297,14 @@ func (rethinkService *RethinkService) executeCreateIfAbsent(listTerm rethink.Ter
 	return nil
 }
 
-func (rethinkService *RethinkService) getLastMessages(id uuid.UUID, msgChan chan Message, filters Filters) {
+func (rethinkService *RethinkService) getLastMessages(id uuid.UUID, msgChan chan Message, filters Filters, count int) {
 	var filterTerm = rethink.Table(tableName)
 
 	if filters.Topic != "" {
 		filterTerm = filterTerm.GetAllByIndex(index, filters.Topic)
 	}
 
-	cursor, err := filterTerm.OrderBy(rethink.Desc("timestamp")).Limit(20).OrderBy(rethink.Asc("timestamp")).Run(rethinkService.connectionPool[id])
+	cursor, err := filterTerm.OrderBy(rethink.Desc("offset")).Limit(count).OrderBy(rethink.Asc("offset")).Run(rethinkService.connectionPool[id])
 	if err != nil {
 		log.Warnf("Get desc error: %s", err.Error())
 		return
