@@ -26,6 +26,10 @@ type Message struct {
 }
 
 func (message Message) Filter(filters Filters) bool {
+	if filters.Topic == "" && len(filters.Filters) == 0 {
+		return false
+	}
+
 	if filters.Topic != "" && !strings.EqualFold(message.Topic, filters.Topic) {
 		return false
 	}
