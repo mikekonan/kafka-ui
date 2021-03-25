@@ -51,10 +51,9 @@ func (message Message) Filter(filters Filters) bool {
 
 		if val, ok := headers[filter.FieldName]; ok {
 			log.Tracef("Filter: compare header %s, message value: %s, filter value: %s", filter.FieldName, val, filter.FieldValue.(string))
-			if !strings.EqualFold(val, filter.FieldValue.(string)) {
+			if !filter.Compare(val, filter.FieldValue) {
 				return false
 			}
-			log.Tracef("Filter compare header: %s succeedded", filter.FieldName)
 			continue
 		}
 		return false
