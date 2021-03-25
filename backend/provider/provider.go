@@ -3,6 +3,7 @@ package provider
 import (
 	"backend/config"
 	"backend/store"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -60,6 +61,9 @@ func (provider *Provider) Serve() {
 			default:
 				if message, err = provider.consumer.ReadMessage(-1); err != nil {
 					log.Warnf("Kafka read message: %s", err.Error())
+					if strings.Contains(strings.ToLower(err.Error()), strings.ToLower("subscribed topic not available")) {
+						topicsChan <- 1
+					}
 					continue
 				}
 				provider.configure.ServeWriteChannel() <- store.New(*message)
