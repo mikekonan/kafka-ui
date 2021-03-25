@@ -38,5 +38,5 @@ or via docker-compose.yml:
 - Use `DB_PORT` to set the rethinkdb port `(default: 28015)`
 
 ## Plans
-[x] Filtering messages
-[ ] Add ability to publish messages
+- [x] Filtering messages
+- [ ] Add ability to publish messages
