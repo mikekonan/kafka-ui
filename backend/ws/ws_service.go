@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
+	"time"
 
 	"backend/config"
 	"backend/store"
@@ -91,9 +92,14 @@ func (wsService *WsService) handleInput(id uuid.UUID, socketCancel context.Cance
 				log.Tracef("Get msg from client '%s': %s", id, string(msg))
 
 				if opCode == ws.OpClose || opCode == ws.OpContinuation {
-					log.Tracef("Get closed command for connection '%s'", id)
+					log.Infof("Get closed command for connection '%s'", id)
 					socketCancel()
 					return
+				}
+
+				if opCode == ws.OpPong {
+					log.Tracef("Ping/pong for connection: %s", id)
+					continue
 				}
 
 				_ = json.Unmarshal(msg, &request)
@@ -107,6 +113,7 @@ func (wsService *WsService) handleInput(id uuid.UUID, socketCancel context.Cance
 
 func (wsService *WsService) handleOutput(id uuid.UUID, wsCmdReqChan <-chan MessageRequest, wsSocketContext context.Context) {
 	go func() {
+		timeTick := time.Tick(30 * time.Second)
 		startTopicChan := make(chan interface{}, 1)
 		filterChan := make(chan store.Filters, 1)
 
@@ -121,6 +128,13 @@ func (wsService *WsService) handleOutput(id uuid.UUID, wsCmdReqChan <-chan Messa
 
 			case <-wsSocketContext.Done():
 				return
+
+			case <-timeTick:
+				log.Tracef("Ping connection: %s", id)
+				if err := wsutil.WriteServerMessage(wsService.connections[id], ws.OpPing, []byte("{}")); err != nil {
+					log.Errorf("WsSocket: failed to write message to '%s'. Err: %s", id, err.Error())
+					return
+				}
 
 			case message, ok := <-wsMsgChan:
 				if !ok {

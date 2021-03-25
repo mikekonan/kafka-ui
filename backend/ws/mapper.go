@@ -51,6 +51,7 @@ func ConvertToStoreFilter(request MessageRequest) (result store.Filters) {
 	for _, filter := range request.Filters {
 		if filter.Param == "topic" {
 			result.Topic = filter.Value
+			continue
 		}
 
 		result.Filters = append(result.Filters, store.Filter{

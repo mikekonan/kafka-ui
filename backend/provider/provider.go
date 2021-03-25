@@ -3,11 +3,13 @@ package provider
 import (
 	"backend/config"
 	"backend/store"
-	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
+
+var topics = []string{"^choreographer.*", "^.*domain"}
 
 type Service interface {
 	Serve()
@@ -21,9 +23,9 @@ type Provider struct {
 
 func (provider *Provider) Serve() {
 	var (
-		err     error
-		topics  []string
-		message *kafka.Message
+		err        error
+		message    *kafka.Message
+		topicsChan = make(chan interface{})
 	)
 
 	go func() {
@@ -31,14 +33,13 @@ func (provider *Provider) Serve() {
 			"bootstrap.servers": provider.configure.Config.KafkaHost,
 			"group.id":          provider.configure.Config.KafkaGroup,
 			"auto.offset.reset": "smallest",
+			"topic.blacklist":   "__consumer_offsets",
 		}); err != nil {
 			log.Fatalf("Kafka connection error: %s", err.Error())
 		}
 		defer provider.close()
 
-		if topics, err = provider.topics(); err != nil {
-			log.Fatalf("Couldn't get topics: %s", err.Error())
-		}
+		provider.listenNewTopics(topicsChan)
 
 		if err = provider.consumer.SubscribeTopics(topics, nil); err != nil {
 			log.Fatalf("Kafka: failed to subscribe on topics - '%s'. Err: %s", topics, err.Error())
@@ -49,6 +50,12 @@ func (provider *Provider) Serve() {
 			select {
 			case <-provider.configure.GlobalContext.Done():
 				return
+
+			case <-topicsChan:
+				_ = provider.consumer.Unsubscribe()
+				if err = provider.consumer.SubscribeTopics(topics, nil); err != nil {
+					log.Fatalf("Kafka: failed to subscribe on topics - '%s'. Err: %s", topics, err.Error())
+				}
 
 			default:
 				if message, err = provider.consumer.ReadMessage(-1); err != nil {
@@ -75,17 +82,24 @@ func (provider *Provider) close() {
 	}
 }
 
-func (provider *Provider) topics() (topics []string, err error) {
-	meta, err := provider.consumer.GetMetadata(nil, true, 3000)
-	if err != nil {
-		return
-	}
+func (provider *Provider) listenNewTopics(topicChan chan interface{}) {
+	var topics int
+	go func() {
+		timer := time.NewTimer(2 * time.Second)
 
-	for _, v := range meta.Topics {
-		if strings.Contains(v.Topic, store.SkipTopics) {
-			continue
+		for {
+			select {
+			case <-timer.C:
+				meta, err := provider.consumer.GetMetadata(nil, true, 3000)
+				if err != nil {
+					return
+				}
+
+				if topics != len(meta.Topics) {
+					topics = len(meta.Topics)
+					topicChan <- 1
+				}
+			}
 		}
-		topics = append(topics, v.Topic)
-	}
-	return
+	}()
 }

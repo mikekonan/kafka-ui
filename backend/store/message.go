@@ -12,7 +12,7 @@ import (
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
-const messageFilterFields = "topic;offset;partition;timestamp;at;size;"
+const messageFilterFields = "offset;partition;timestamp;at;size;"
 
 type Message struct {
 	Topic     string    `rethinkdb:"topic"`
@@ -26,28 +26,37 @@ type Message struct {
 }
 
 func (message Message) Filter(filters Filters) bool {
+	if filters.Topic != "" && !strings.EqualFold(message.Topic, filters.Topic) {
+		return false
+	}
+
 	for _, filter := range filters.Filters {
-		if filter.FieldName == "" || filter.Comparator == nil {
-			return true
+		if filter.FieldName == "" {
+			continue
 		}
 
 		r := reflect.ValueOf(message)
 
 		if strings.Contains(messageFilterFields, strings.ToLower(filter.FieldName)) {
 			val := r.FieldByName(strings.Title(strings.ToLower(filter.FieldName)))
+			log.Tracef("Message value: %s for field %s, filter value: %s", val, strings.Title(strings.ToLower(filter.FieldName)), filter.FieldValue)
 			if !filter.Compare(val.Interface(), filter.FieldValue) {
 				return false
 			}
+			continue
 		}
 
 		var headers = map[string]string{}
 		_ = json.Unmarshal(message.Headers, &headers)
 
 		if val, ok := headers[filter.FieldName]; ok {
-			if !strings.EqualFold(val, filter.FieldValue.(string)) {
+			log.Tracef("Filter: compare header %s, message value: %s, filter value: %s", filter.FieldName, val, filter.FieldValue.(string))
+			if !filter.Compare(val, filter.FieldValue) {
 				return false
 			}
+			continue
 		}
+		return false
 	}
 
 	return true

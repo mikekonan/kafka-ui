@@ -108,7 +108,7 @@ func (rethinkService *RethinkService) Messages(socketContext context.Context, fi
 				rethinkService.getLastMessages(id, msgChan, filter)
 
 			case msg := <-changesChan:
-				if filter.Topic == "" {
+				if len(filter.Filters) == 0 {
 					continue
 				}
 
@@ -302,7 +302,13 @@ func (rethinkService *RethinkService) executeCreateIfAbsent(listTerm rethink.Ter
 }
 
 func (rethinkService *RethinkService) getLastMessages(id uuid.UUID, msgChan chan Message, filters Filters) {
-	cursor, err := rethink.Table(tableName).GetAllByIndex(index, filters.Topic).OrderBy(rethink.Desc("timestamp")).Limit(20).OrderBy(rethink.Asc("timestamp")).Run(rethinkService.connectionPool[id])
+	var filterTerm = rethink.Table(tableName)
+
+	if filters.Topic != "" {
+		filterTerm = filterTerm.GetAllByIndex(index, filters.Topic)
+	}
+
+	cursor, err := filterTerm.OrderBy(rethink.Desc("timestamp")).Limit(20).OrderBy(rethink.Asc("timestamp")).Run(rethinkService.connectionPool[id])
 	if err != nil {
 		log.Warnf("Get desc error: %s", err.Error())
 		return
