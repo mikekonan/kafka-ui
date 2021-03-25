@@ -60,8 +60,6 @@ func (numberComparator NumberComparator) Compare(left, right interface{}) bool {
 		leftNumber = int64(left.(int))
 	case int32:
 		leftNumber = int64(left.(int32))
-	case int64:
-		leftNumber = left.(int64)
 	default:
 		leftNumber = left.(int64)
 	}
