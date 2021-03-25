@@ -108,7 +108,7 @@ func (rethinkService *RethinkService) Messages(socketContext context.Context, fi
 				rethinkService.getLastMessages(id, msgChan, filter)
 
 			case msg := <-changesChan:
-				if filter.Topic == "" || len(filter.Filters) == 0 {
+				if len(filter.Filters) == 0 {
 					continue
 				}
 
