@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,6 +31,7 @@ type RethinkService struct {
 	connectionPool map[uuid.UUID]*rethink.Session
 	topics         []string
 	newTopicChan   chan string
+	mutex          sync.Mutex
 }
 
 func (rethinkService *RethinkService) Topics(socketContext context.Context, startChan <-chan interface{}) <-chan Message {
@@ -214,6 +216,7 @@ func (rethinkService *RethinkService) InitializeContext() error {
 		err error
 		id  uuid.UUID
 	)
+	rethinkService.mutex = sync.Mutex{}
 	// Create DB
 	rethinkService.connectionPool = make(map[uuid.UUID]*rethink.Session)
 	rethinkService.newTopicChan = make(chan string)
@@ -265,8 +268,10 @@ func (rethinkService *RethinkService) connect(isDbCreated bool) (uuid.UUID, erro
 		return [16]byte{}, err
 	}
 
+	rethinkService.mutex.Lock()
 	id := uuid.New()
 	rethinkService.connectionPool[id] = session
+	rethinkService.mutex.Unlock()
 
 	return id, nil
 }
