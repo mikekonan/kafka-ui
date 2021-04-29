@@ -31,7 +31,7 @@ type RethinkService struct {
 	connectionPool map[uuid.UUID]*rethink.Session
 	topics         []string
 	newTopicChan   chan string
-	mutex          sync.Mutex
+	mutex          sync.RWMutex
 }
 
 func (rethinkService *RethinkService) Topics(socketContext context.Context, startChan <-chan interface{}) <-chan Message {
@@ -67,7 +67,7 @@ func (rethinkService *RethinkService) Topics(socketContext context.Context, star
 				msgChan <- Message{Topic: topic}
 
 			case <-startChan:
-				if cursor, err = termTopics.Run(rethinkService.connectionPool[id]); err != nil {
+				if cursor, err = termTopics.Run(rethinkService.getConnection(id)); err != nil {
 					log.Error(err.Error())
 				}
 
@@ -139,7 +139,7 @@ func (rethinkService *RethinkService) listenChanges(socketContext context.Contex
 				return
 
 			default:
-				cursor, err := rethink.Table(tableName).Changes().Run(rethinkService.connectionPool[id])
+				cursor, err := rethink.Table(tableName).Changes().Run(rethinkService.getConnection(id))
 				if err != nil {
 					log.Errorf("RethinkDb get changes error: %s", err.Error())
 				}
@@ -178,7 +178,7 @@ func (rethinkService *RethinkService) Serve() {
 		var topic string
 		cursor, _ := rethink.Table(tableName).Distinct(rethink.DistinctOpts{
 			Index: index,
-		}).Run(rethinkService.connectionPool[id])
+		}).Run(rethinkService.getConnection(id))
 
 		for cursor.Next(&topic) {
 			if strings.Contains(topic, SkipTopics) {
@@ -199,7 +199,7 @@ func (rethinkService *RethinkService) Serve() {
 
 				rethinkService.appendTopic(msg.(Message).Topic)
 
-				err := rethink.Table(tableName).Insert(msg.(Message)).Exec(rethinkService.connectionPool[id])
+				err := rethink.Table(tableName).Insert(msg.(Message)).Exec(rethinkService.getConnection(id))
 				if err != nil {
 					log.Warnf("Insert message error: %s", err.Error())
 				}
@@ -216,7 +216,7 @@ func (rethinkService *RethinkService) InitializeContext() error {
 		err error
 		id  uuid.UUID
 	)
-	rethinkService.mutex = sync.Mutex{}
+	rethinkService.mutex = sync.RWMutex{}
 	// Create DB
 	rethinkService.connectionPool = make(map[uuid.UUID]*rethink.Session)
 	rethinkService.newTopicChan = make(chan string)
@@ -244,7 +244,7 @@ func (rethinkService *RethinkService) InitializeContext() error {
 		return err
 	}
 
-	_ = rethink.Table(tableName).IndexWait().Exec(rethinkService.connectionPool[id])
+	_ = rethink.Table(tableName).IndexWait().Exec(rethinkService.getConnection(id))
 	rethinkService.close(id)
 
 	return nil
@@ -268,17 +268,14 @@ func (rethinkService *RethinkService) connect(isDbCreated bool) (uuid.UUID, erro
 		return [16]byte{}, err
 	}
 
-	rethinkService.mutex.Lock()
-	id := uuid.New()
-	rethinkService.connectionPool[id] = session
-	rethinkService.mutex.Unlock()
-
-	return id, nil
+	return rethinkService.createConnection(session), nil
 }
 
 func (rethinkService *RethinkService) close(id uuid.UUID) {
-	rethinkService.connectionPool[id].Close()
+	rethinkService.getConnection(id).Close()
+	rethinkService.mutex.Lock()
 	delete(rethinkService.connectionPool, id)
+	rethinkService.mutex.Unlock()
 }
 
 func (rethinkService *RethinkService) executeCreateIfAbsent(listTerm rethink.Term, createTerm rethink.Term, id uuid.UUID) error {
@@ -288,13 +285,13 @@ func (rethinkService *RethinkService) executeCreateIfAbsent(listTerm rethink.Ter
 		err        error
 	)
 
-	if dbResponse, err = listTerm.Run(rethinkService.connectionPool[id]); err != nil {
+	if dbResponse, err = listTerm.Run(rethinkService.getConnection(id)); err != nil {
 		return err
 	}
 
 	dbResponse.Next(&isContains)
 	if !isContains {
-		if err = createTerm.Exec(rethinkService.connectionPool[id]); err != nil {
+		if err = createTerm.Exec(rethinkService.getConnection(id)); err != nil {
 			return err
 		}
 	}
@@ -309,7 +306,7 @@ func (rethinkService *RethinkService) getLastMessages(id uuid.UUID, msgChan chan
 		filterTerm = filterTerm.GetAllByIndex(index, filters.Topic)
 	}
 
-	cursor, err := filterTerm.OrderBy(rethink.Desc("offset")).Limit(count).OrderBy(rethink.Asc("offset")).Run(rethinkService.connectionPool[id])
+	cursor, err := filterTerm.OrderBy(rethink.Desc("offset")).Limit(count).OrderBy(rethink.Asc("offset")).Run(rethinkService.getConnection(id))
 	if err != nil {
 		log.Warnf("Get desc error: %s", err.Error())
 		return
@@ -337,4 +334,19 @@ func (rethinkService *RethinkService) appendTopic(topic string) {
 	rethinkService.topics = append(rethinkService.topics, topic)
 	log.Tracef("Send new topic: %s", topic)
 	rethinkService.newTopicChan <- topic
+}
+
+func (rethinkService *RethinkService) getConnection(id uuid.UUID) *rethink.Session {
+	rethinkService.mutex.RLock()
+	session := rethinkService.connectionPool[id]
+	rethinkService.mutex.RUnlock()
+	return session
+}
+
+func (rethinkService *RethinkService) createConnection(session *rethink.Session) uuid.UUID {
+	id := uuid.New()
+	rethinkService.mutex.Lock()
+	rethinkService.connectionPool[id] = session
+	rethinkService.mutex.Unlock()
+	return id
 }
